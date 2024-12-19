@@ -171,6 +171,8 @@ AWS Organizations centralize account management for multi-account environments. 
 #### Overview
 SCPs restrict actions that member accounts can perform. They act as a "guardrail," not granting permissions but limiting what IAM policies can allow. Master accounts cannot be restricted by SCPs (security risk).
 
+- **Only Overlaps Allowed**: Only allow rules in both the SCP **and** the IAM policy are granted. If a rule is missing in one or the other, the action is denied.
+
 #### Allow List vs Deny List:
 1. **Deny List** (Default):
    - AWS applies `FullAWSAccess` SCP initially, allowing all actions.
