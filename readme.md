@@ -230,6 +230,19 @@ Tracks API activity and user actions for auditing and compliance.
 
 ---
 
+### 1.2.11. AWS Control Tower
+
+#### Overview
+- Quick and easy setup of multi-account environments
+- Orchestrates other AWS services to provide this functionality
+- Organizations, IAM identity center, CloudFormation, Config and more
+- **Landing Zone**: Centralized management for multi-account environments
+  - SSO/ID Federation, Centralized logging and auditing
+- **Guard Rails**: Detect/Mandate rules/standards across all accounts
+- **Account Factory**: Automates and standardizes account creation
+
+---
+
 ## 1.3. Simple Storage Service (S3)
 
 ### 1.3.1. S3 Security
