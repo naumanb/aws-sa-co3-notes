@@ -239,6 +239,7 @@ Tracks API activity and user actions for auditing and compliance.
 - **Landing Zone**: Centralized management for multi-account environments
   - SSO/ID Federation, Centralized logging and auditing
 - **Guard Rails**: Detect/Mandate rules/standards across all accounts
+  - Mandatory, Strongly Recommended, or Elective
 - **Account Factory**: Automates and standardizes account creation
 
 ---
@@ -249,6 +250,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 - **Private by Default**: Only the account root user has access initially.
 - **Bucket Policy**: Manages access at the bucket level for cross-account or anonymous access.
+  - Type of **Resource Policy**: like identity policy, but attached to bucket
 - **Access Control Lists (ACLs)**: Legacy feature; not recommended due to limitations.
 
 ---
