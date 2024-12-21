@@ -347,7 +347,10 @@ Tracks API activity and user actions for auditing and compliance.
 
 ### 1.3.8. Object Lifecycle Management
 
+- **Lifecycle configuration**: Set of rules consisting of actions on a bucket or group of objects.
+  - Transition Actions and Expiration Actions
 - Automates transitions between storage classes or object expiration.
+  - Minimum of **30 days** before transition.
 - Example:
   - Move to Standard-IA after 90 days.
   - Archive to Glacier after 1 year.
@@ -360,11 +363,15 @@ Tracks API activity and user actions for auditing and compliance.
    - Replicates objects between buckets in different regions.
 2. **Same-Region Replication (SRR)**:
    - Replicates objects within the same region.
+3. Within same account or between different accounts.
+  - Need a bucket policy at destination account to allow Source Role to transfer.
 
 #### Key Notes:
 - Requires versioning enabled on both buckets.
 - Cannot replicate retroactively.
-- Handles SSE-S3 and SSE-KMS; cannot replicate SSE-C.
+- Handles SSE-S3, SSE-KMS, and SSE-C.
+- Source bucket owner needs permissions to objects.
+- No system events, Glacier, or Glacier Deep Archive.
 
 ---
 
@@ -375,6 +382,7 @@ Tracks API activity and user actions for auditing and compliance.
   - Security credentials.
   - Bucket and object key.
   - Expiry time.
+- The permissions of the URL match the identity which generated it.
 
 ---
 
@@ -382,6 +390,37 @@ Tracks API activity and user actions for auditing and compliance.
 
 - Retrieve specific parts of an object using SQL-like queries.
 - Reduces data transfer and retrieval costs.
+
+---
+
+### 1.3.12. S3 Event Notifications
+
+- Notification generated when events occur in a bucket
+- Can be delivered to SQS, SNS, or Lambda.
+- **Event Types**:
+  - Object Created
+  - Object Deleted
+  - Object Restore
+  - Object Replication
+
+---
+
+### 1.3.13. S3 Object Locks
+
+- Store objects using a write-once-read-many (WORM) model.
+- Prevent objects from being deleted or overwritten for a fixed amount of time or indefinitely.
+- Requires versioning
+- Retention period: days & years
+- Architectures: Legal Hold, Governance, & Compliance
+  - Compliance: Can't be adjusted, deleted, or overwritten.
+
+---
+
+### 1.3.13. S3 Access Points
+
+- Simplify managing access to S3 buckets/objects.
+- Create multiple access points for different use cases, policies, and network access controls.
+- Created via Console or **aws s3control create-access-point** command.
 
 ---
 
