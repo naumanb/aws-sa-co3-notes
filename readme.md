@@ -635,6 +635,7 @@ Tracks API activity and user actions for auditing and compliance.
   - Managed service; scales up to **45 Gbps**.
   - No port forwarding or bastion host capabilities.
 - **NAT Instance**:
+  - On a EC2 Instance.
   - Customizable but single-point-of-failure.
 
 #### IPv6 Note
