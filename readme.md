@@ -416,7 +416,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ---
 
-### 1.3.13. S3 Access Points
+### 1.3.14. S3 Access Points
 
 - Simplify managing access to S3 buckets/objects.
 - Create multiple access points for different use cases, policies, and network access controls.
@@ -424,23 +424,220 @@ Tracks API activity and user actions for auditing and compliance.
 
 ---
 
-## 1.5. Virtual Private Cloud (VPC)
+## 1.4 Virtual Private Cloud (VPC)
 
-### 1.5.1. VPC Basics
+### 1.4.1 Networking Refresher
 
-- **VPC**: Isolated network in AWS.
-- CIDR block range: `/28` (16 IPs) to `/16` (65,536 IPs).
-- **Subnet**: Subdivision of a VPC tied to an AZ.
+#### IPv4 - RFC 791 (1981)
+- Uses **dotted decimal notation**: 4 numbers (0-255) separated by periods.
+- Total: **~4.3 billion addresses**.
+- Limitation: Inflexible sizing; some addresses often go unused.
+
+#### Classful Addressing
+- **Class A**: `0.0.0.0 - 127.255.255.255` (Large companies; 128 networks).
+- **Class B**: `128.0.0.0 - 191.255.255.255` (Medium organizations).
+- **Class C**: `192.0.0.0 - 223.255.255.255` (Small networks).
+
+#### Internet/Private IPs - RFC1918
+- **Private IP ranges** (not internet-routable):
+  - **Class A**: `10.0.0.0 - 10.255.255.255`
+  - **Class B**: `172.16.0.0 - 172.31.255.255`
+  - **Class C**: `192.168.0.0 - 192.168.255.255`
+
+#### Classless Inter-Domain Routing (CIDR)
+- CIDR notation: `<network address>/<prefix>`.
+  - **Example**: `10.0.0.0/16` (65,536 addresses).
+  - Larger prefix = smaller network, e.g., `/20` splits `/16` into 16 subnets.
+
+#### Key IP Address Notations
+- `0.0.0.0/0`: All IPs.
+- `10.0.0.0/8`: All IPs starting with `10` (Class A).
+- `10.0.0.0/16`: All IPs starting with `10.0` (Class B).
+- `10.0.0.0/32`: Single IP address.
+
+#### Packets
+- Contains:
+  - **Source IP**
+  - **Destination IP**
+  - **Data**
+- Uses protocols:
+  - **TCP** (connection-oriented).
+  - **UDP** (connectionless).
+- Ports allow multiple concurrent communications.
+
+#### IPv6 - RFC 8200 (2017)
+- Format: `2001:0db8:28ac::82ae:3910:7334`.
+- Total: **128-bit** addresses (vastly larger than IPv4).
+- CIDR notation applies, e.g., `2001:db8::/48` spans addresses `2001:db8:0000::` to `2001:db8:ffff::`.
+- `::/0` covers all IPv6 addresses.
 
 ---
 
-### 1.5.6. NACLs vs Security Groups
+### 1.4.2 VPC Sizing and Structure
 
-1. **NACLs**:
-   - Stateless; rules apply to both inbound and outbound traffic.
-   - Allows explicit deny.
-2. **Security Groups**:
-   - Stateful; response traffic is automatically allowed.
-   - Cannot explicitly deny traffic.
+#### VPC Considerations
+- **Size**: Plan VPC size to avoid overlap with other VPCs or cloud networks.
+- **Range**: Use uncommon ranges, e.g., `10.16.x.x`.
+  - Min: `/28` (16 IPs).
+  - Max: `/16` (65,536 IPs).
+- Reserve ranges per region/account for scalability.
+
+#### Subnet Sizing
+- Subnets are **AZ-specific**.
+- Best practice: Use at least **4 AZs** with separate tiers (web, app, DB, spare).
+- Example: Splitting `/16` into `/20` provides **16 subnets**.
 
 ---
+
+### 1.4.3 Custom VPC
+
+#### Features
+- **Regionally isolated and resilient**.
+- No inbound/outbound traffic without explicit configuration.
+- **Hybrid Networking**: Connects on-prem/cloud environments.
+- Tenancy options:
+  - **Default**: Shared hardware.
+  - **Dedicated**: Isolated hardware (higher cost).
+
+#### Key Facts
+- **IPv4**: Mandatory CIDR block (min `/28`, max `/16`).
+  - Can add up to **5 secondary CIDR blocks**.
+- **IPv6**: Assigned `/56` CIDR (public by default).
+- **DNS Support**: Provided by Route 53.
+  - IP: `<VPC Base> + 2` (e.g., `10.0.0.2`).
+  - Options:
+    - **DNS Hostnames**: Assign public DNS to instances.
+    - **DNS Resolution**: Enable VPC DNS access.
+
+---
+
+### 1.4.4 VPC Subnets
+
+#### Subnet Features
+- **AZ-resilient**: Subnets fail if the AZ fails.
+- IPv4 CIDRs: Cannot overlap within the VPC.
+- IPv6: Optional allocation.
+- **Communication**: Subnets in the same VPC communicate by default.
+
+#### Reserved IPs
+- **5 reserved IPs** per subnet:
+  1. Network address (e.g., `10.16.16.0`).
+  2. VPC router (`10.16.16.1`).
+  3. DNS (`10.16.16.2`).
+  4. Future AWS use (`10.16.16.3`).
+  5. Broadcast (`10.16.31.255`).
+
+#### DHCP Options Set
+- Automates IP assignment.
+- Cannot edit; create new set if changes are needed.
+
+#### IP Allocation
+- **Public IPv4**: Enabled to make subnets public.
+- **IPv6**: Requires subnet and VPC IPv6 allocations.
+
+---
+
+### 1.4.5 VPC Routing and Internet Gateway (IGW)
+
+#### VPC Router
+- Moves traffic between subnets.
+- Route tables define outbound traffic behavior.
+  - Each subnet uses the **main route table** unless explicitly associated with a custom table.
+
+#### Route Tables
+- Matches destination IPs against routes.
+- **Local routes** (within VPC) cannot be modified and take precedence.
+
+#### Internet Gateway (IGW)
+- **Enables external connectivity** for VPCs.
+- **Regional service**: Covers all AZs in a region.
+- Attach to VPC:
+  - No IGW = private VPC.
+  - One IGW = public VPC.
+- Steps:
+  1. Create IGW.
+  2. Attach IGW to VPC.
+  3. Create custom route table (RT).
+  4. Associate RT.
+  5. Default Routes => IGW.
+  6. Subnet allocate IPv4.
+
+#### IGW Functionality
+- **Private-to-Public Translation**: Maps private IPs to public IPs for external access.
+- **IPv6**: Public by default; no translation needed.
+
+#### Bastion Host / Jumpbox
+
+- An instance in public subnet where incoming management connections arrive.
+- Used as an inbound management point, or as an entry point for private-only VPCs.
+
+---
+
+### 1.4.6 Stateful vs Stateless Firewalls
+- Every connection has a request and a response.
+- Both can be in either direction inbound/outbound (based on perspective).
+- **Stateless**: Doesn't understand state of connections.
+  - Need 2 rules (1 IN, 1 OUT) per connection.
+- **Stateful**: Can identify the request and response components of a connection as being related.
+  - Allowing request means response is automatically allowed.
+
+---
+
+### 1.4.6 Network Access Control Lists (NACLs)
+
+#### Features
+- **Stateless**: Separate inbound and outbound rules.
+- **Subnet-level**: Filters traffic crossing subnet boundaries.
+- Rules processed in order, lowest number first.
+- Fields:
+  - **Type**: Protocol (TCP/UDP/ICMP).
+  - **Port Range**.
+  - **Source/Destination**.
+- Default implicit deny (`*`).
+
+#### Example
+- Allow HTTPS (TCP/443) inbound.
+- Add outbound ephemeral ports (`1024-65535`) for response traffic.
+
+#### Exam PowerUp
+- Use NACLs for:
+  - Explicit deny (e.g., blocking bad IPs).
+  - Non-SG-compatible resources (e.g., NAT Gateways).
+
+---
+
+### 1.4.7 Security Groups (SGs)
+
+#### Features
+- **Stateful**: Tracks inbound/outbound traffic automatically.
+- **Resource-level**: Attached to ENIs (Elastic Network Interfaces), not instances or subnets.
+- Default SG:
+  - Allows all traffic within the group.
+  - Implicit deny for everything else.
+- **Logical referencing**: When you reference an SG from another SG, you're implicitly referencing any resources associated with that SG.
+
+#### Exam PowerUp
+- Use SGs as the default for most configurations.
+- Combine with NACLs for explicit deny scenarios.
+
+---
+
+### 1.4.8 Network Address Translation (NAT) Gateway
+
+#### Features
+- Gives Private CIDR range **outgoing** internet access.
+- **IP Masquerading**: Hides CIDR blocks behind one IP.
+- **Elastic IPs**: Static public IPs.
+- AZ-resilient but not region-resilient (deploy in multiple AZs for HA).
+
+#### Comparison
+- **NAT Gateway**:
+  - Managed service; scales up to **45 Gbps**.
+  - No port forwarding or bastion host capabilities.
+- **NAT Instance**:
+  - Customizable but single-point-of-failure.
+
+#### IPv6 Note
+- NAT not required for IPv6; all IPv6 addresses are public.
+
+
