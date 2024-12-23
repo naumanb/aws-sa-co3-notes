@@ -883,4 +883,88 @@ Tracks API activity and user actions for auditing and compliance.
 - Contains details about the instance (e.g., IPs, user data).
 - **Important**: Metadata access is not authenticated or encrypted.
 
+---
+## 1.6 Containers and ECS
+
+### 1.6.1 Intro to Containers
+
+#### Virtualization Problems
+- Traditional EC2 VMs (e.g., 4 GB RAM, 40 GB disk with Nitro Hypervisor):
+  - OS can consume **60-70% of the disk** and significant memory.
+- **Containers** optimize resource usage by removing duplicate OS elements, allowing applications to run in isolated environments.
+
+#### Image Anatomy
+- Docker images are built from **multiple independent layers**, not monolithic.
+- Each layer corresponds to a line in the **Dockerfile**.
+- **Images** are read-only, while **containers** add a read/write layer for execution.
+- Shared architecture minimizes disk space usage across containers with similar base layers.
+
+#### Image Usage
+- A **Docker image** becomes a running **Docker container** with a writable layer added.
+- Base layers (OS) are often provided by vendors via **container registries** (e.g., Docker Hub).
+
+#### Container Registry
+- **Container Registry**: Repository for storing and sharing container images (e.g., Docker Hub, AWS ECR).
+- Workflow:
+  1. Use a **Dockerfile** to create an image.
+  2. Upload the image to a registry (private or public).
+  3. Deploy containers to Docker hosts (running a container engine).
+
+#### Container Key Concepts
+- **Dockerfile** builds container images.
+- **Portability**: Containers run identically across compatible hosts.
+- **Lightweight**: Uses host OS resources efficiently.
+- **Shared Layers**: Reduces redundancy and disk usage.
+- **Ports**: Expose for external communication.
+- **Multi-Container Applications**: Supports complex application stacks.
+
+---
+
+### 1.6.2 Elastic Container Service (ECS) Concepts
+- ECS is a **managed container-based compute service** for running containers.
+- Operates in two modes:
+  1. **EC2 mode**: Leverages EC2 instances for container orchestration.
+  2. **Fargate mode**: Serverless, no EC2 management required.
+
+#### Key Components
+- **Cluster**: Logical group where containers run.
+  - Can span **multiple AZs** within a VPC.
+- **Container Definition**:
+  - Specifies image source, ports, and minimal container info.
+- **Task Definition**:
+  - Includes resources, task roles (IAM), and permissions for AWS services.
+- **ECS Service**:
+  - Configures scaling and high availability via service definitions (e.g., how many tasks to run).
+
+---
+
+### 1.6.3 ECS Cluster Types
+
+#### Scheduling and Orchestration
+ECS manages:
+- **Cluster Management**: Organizes resources.
+- **Task Placement**: Determines where containers run.
+
+#### EC2 Mode
+- **Cluster in a VPC**: Benefits from multi-AZ resilience.
+- Requires managing EC2 instances (not serverless).
+- Autoscaling Group (ASG): Control horizontal scaling of EC2 instances.
+- **ECR**: Container registry for storing container images.211
+- Supports:
+  - **Spot pricing** for cost-efficiency.
+  - Prepaid EC2 for predictable costs.
+
+#### Fargate Mode
+- **Serverless**: No EC2 management required.
+- Tasks are injected into the VPC with **elastic network interfaces** and VPC IPs.
+- Billing is based on **container resource usage**, not instance size.
+
+#### EC2 vs ECS (EC2) vs Fargate
+- Use **ECS** for containerized workloads.
+- **EC2 mode**:
+  - Ideal for large workloads with cost sensitivity (supports spot pricing).
+- **Fargate**:
+  - Suitable for burst-style, batch, or periodic workloads.
+  - Reduces operational overhead for small workloads.
+
 
