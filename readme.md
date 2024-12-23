@@ -641,4 +641,246 @@ Tracks API activity and user actions for auditing and compliance.
 #### IPv6 Note
 - NAT not required for IPv6; all IPv6 addresses are public.
 
+---
+
+## 1.5 Elastic Cloud Compute (EC2)
+
+### 1.5.1 Virtualization 101
+
+#### Server Configuration Without Virtualization
+- **CPU Hardware**: Handles all computations.
+- **Kernel**: Operates in privileged mode, interacts directly with hardware.
+- **User Mode**: Runs applications, interacts with hardware via system calls.
+  - Direct hardware interaction without system calls leads to errors/crashes.
+
+#### Types of Virtualization
+
+- **Emulated Virtualization (Software Virtualization)**
+  - **Host OS** includes a hypervisor (HV) that emulates hardware for guest OS.
+  - HV performs binary translation for system calls.
+  - Slower but no guest OS modification needed.
+
+- **Para-Virtualization**
+  - Guest OS is modified to make hypercalls instead of system calls.
+  - Faster since binary translation is avoided.
+
+- **Hardware-Assisted Virtualization**
+  - Virtualization-aware hardware (CPU traps privileged instructions).
+  - Input/output operations like disk I/O and network sharing are crucial.
+
+- **SR-IOV (Single Root I/O Virtualization)**
+  - Physical hardware presents multiple virtual interfaces for enhanced networking
+  - Fastest I/O speed
+  - Called "Enhanced Networking" in EC2
+
+---
+
+### 1.5.2 EC2 Architecture and Resilience
+
+- Virtual machines (OS + Resources)
+- Run on EC2 Hosts
+- Good for:
+  - Traditional OS+Application Computer
+  - Long-running computer
+  - Server style applications
+  - Monolithic application stacks
+  - Migrating application workloads
+
+#### EC2 Hosts and Tenancy
+- **Shared**: Instances share hardware but are isolated.
+- **Dedicated**: Hardware exclusive to a customer; instances from the same account can share it.
+- **Dedicated Host**: Entire physical server is dedicated to a single customer.
+
+#### Availability Zone (AZ) Resilience
+- Instances are tied to **one AZ**.
+- Data and storage (e.g., EBS) are specific to the AZ.
+- Relocation occurs on host failure but stays within the same AZ.
+
+#### EC2 Networking
+- Instances are provisioned with **Elastic Network Interfaces (ENI)**, mapping to subnets in one AZ.
+- Instances can have multiple ENIs, even across subnets, provided they remain in the same AZ.
+
+---
+
+### 1.5.3 EC2 Instance Types
+
+- **General Purpose (A, T, M)**: Balanced CPU and memory for steady-state workloads.
+- **Compute Optimized (C)**: High-performance computing, gaming, and scientific modeling.
+- **Memory Optimized (R, X)**: Large in-memory datasets.
+- **Accelerated Computing (P, G, F)**: GPUs, FPGAs.
+- **Storage Optimized (H, I, D)**: High-speed storage for analytics and search workloads.
+
+![EC2 Instance Types](image.png)
+
+#### Instance Naming Scheme
+- **Example**: `R5dn.8xlarge`.
+  - `R`: Instance family.
+  - `5`: Generation (newest recommended).
+  - `dn`: Capabilities (e.g., `d` = NVMe storage, `n` = network optimized).
+  - `8xlarge`: Size (memory/CPU).
+
+---
+
+### 1.5.4 Storage Refresher
+
+#### Types of Storage
+- **Direct (local) attached Storage**: Storage on the EC2 Host.
+- **Network attached Storage**: Volumes delivered over the network (EBS).
+- **Ephemeral Storage**: Temporary storage within the instance (EC2).
+- **Persistent Storage**: Permanent storage - lives past the lifetime of instance (EBS).
+
+#### Categories of Storage
+- **Block Storage**: Presented as raw volumes, mountable, bootable (e.g., EBS). 
+  - Use cases: Virtual machine OS, databases.
+  - Scalable only up to disk size, High throughput, Low latency.
+- **File Storage**: Shared file systems, mountable, not bootable (e.g., EFS). 
+  - Use cases: Web servers, file systems.
+  - Scales dynamically, with moderate latency.
+- **Object Storage**: Flat data storage, not mountable or bootable (e.g., S3). 
+  - Use cases: Backups, data lakes, unstructure data.
+  - Unlimited scalabness, variable latency.
+
+#### Storage Performance Metrics
+- **IO Block Size**: Determines data segmentation.
+- **IOPS**: Number of read/write operations per second.
+- **Throughput**: Data transfer rate (MB/s).
+  - **Formula**: Block Size × IOPS = Throughput.
+
+---
+
+### 1.5.5 Elastic Block Store (EBS)
+
+#### Key Features
+- **Block Storage**: Raw disk allocations (volume).
+- **AZ Resilient**: provides persistent block storage tied to **one AZ**.
+- Data replication ensures high availability within the AZ.
+- Snapshot (backup) into S3 for region-resilient backups.
+- Four volume types:
+  - **General Purpose SSD (gp2)**: Default for most workloads, 100 IOPS minimum.
+    - Newer gp3: 3000 IOPS & 125MiB/s standard. 20% cheaper than gp2. Faster throughput.
+  - **Provisioned IOPS SSD (io1/2)**: High IOPS, multi-attach support, up to 64,000 IOPS.
+  - **Throughput-Optimized HDD (st1)**: High throughput for sequential workloads.
+  - **Cold HDD (sc1)**: Cost-efficient, less frequently accessed data.
+
+#### Snapshots and Restores
+- Incremental snapshots to S3 for region-resilient backups.
+- **Lazy Restore**: Data restored in the background; immediate access triggers on-demand restore.
+- **Fast Snapshot Restore (FSR)**: Enables instant restores, billed per snapshot and AZ.
+
+---
+
+### 1.5.6 Instance Store Volumes
+
+- **Block Storage** devices
+- Local ephemeral storage tied to an EC2 host.
+- **ATTACHED AT LAUNCH ONLY**, can't be added later.
+- **High performance** but data is lost when:
+  - Instance is stopped or moved.
+  - Hardware fails or undergoes maintenance.
+- Only available at launch, included in instance cost.
+- **More IOPS and throughput** than EBS.
+
+---
+
+### 1.5.7 EBS vs Instance Store
+
+#### Use Cases
+- **EBS**: Persistent, reliable, and flexible storage.
+  - Cheap = ST1 or SC1
+  - Only up to 260,000 IOPs, even with RAID0 (combined EBS volumes).
+- **Instance Store**: Temporary storage with high IOPS and throughput. Cost already included in instances.
+  - Can do more than 260,000 IOPs.
+
+---
+
+### 1.5.8 EBS Snapshots, Restore, and Fast Snapshot Restore (FSR)
+
+- **Snapshots**: backups of data consumed within EBS Volumes - **Stored on S3**.
+- Incremental: first is a full copy of volume 'data', future are incremental.
+- Can be used to migrate data to different availability zones in a region, or to different regions of AWS.
+- **Snaps restore lazily** - fetched gradually.
+- **FSR**: Enables instant restores, billed per snapshot and AZ. Up to 50 snaps per region.
+
+---
+
+### 1.5.9 EBS Encryption
+- Provides at-rest encryption using **AES-256**.
+- Managed by **AWS KMS** with unique Data Encryption Keys (DEKs) per volume.
+- Each volume uses 1 unique DEK.
+- Snapshots and future volumes inherit encryption from their source volumes.
+- **Important**: Encryption is seamless, with no performance impact.
+
+---
+
+### 1.5.10 EC2 Network Interfaces, IPs, and DNS
+
+#### Elastic Network Interface (ENI)
+- 1 Primary and multiple Secondary ENIs available.
+  - Secondary ENIs: Can detach and move.
+- **Properties**:
+  - **Primary IPv4**: Static for the instance lifetime.
+  - **Public IPv4**: Dynamic, assigned only in public subnets.
+    - Assigned by IGW - OS never sees public IPv4.
+  - **Security Groups**: Apply at the ENI level.
+  - **Elastic IPs**: Can be assigned to private IPs for fixed public access.
+    - Removed the public IPv4 and replaces with Elastic IP.
+  - Public DNS = Private IP in VPC, Public IP everywhere else.
+
+---
+
+### 1.5.11 Amazon Machine Image (AMI)
+
+#### AMI Lifecycle
+- **Create AMI**: Capture EC2 configurations (EBS snapshots, block device mappings).
+- AMI Lifecycle:
+  1) Launch
+  2) Configure 
+  3) Create Image
+  4) Launch
+- **Launch Instances**: Deploy identical instances based on AMI.
+- **Permissions**: Control access (default: private).
+
+#### Exam Tips
+- AMIs are **regional**; copy to other regions as needed.
+- AMI Baking: creating an AMI from a configured instance + application.
+- AMI can't be edited.
+- Can be copied between regions.
+- Billing applies for EBS snapshots associated with the AMI.
+
+---
+
+### 1.5.12 EC2 Purchase Options (Launch Types)
+
+- **On-Demand**: No commitments, pay per second/hour.
+- **Spot Instances**: Up to 90% discount, terminated when bid exceeds spot price.
+- **Reserved Instances**: Up to 75% discount, commitment of 1 or 3 years.
+- **Dedicated Hosts**: EC2 Host allocated to you in entiriety. Pay for Hosts, no instance charges.
+  - Capacity management required.
+  - Better for licensing requirements
+- **Dedicated Instances**: You don't own or share host. Extra charges for instances, but dedicated hardware.
+
+---
+
+### 1.5.13 Scaling Options
+
+#### Vertical Scaling
+- Increase instance size to handle more load (requires reboot).
+- **Limitations**: Expensive and downtime during scaling.
+
+#### Horizontal Scaling
+- Add instances with a load balancer.
+- Requires application support or off-host sessions.
+- **Benefits**:
+  - Stateless applications: application doesn't care which instance it connects to.
+  - No disruption during scaling.
+  - Cost-efficient with smaller instances.
+
+---
+
+### 1.5.14 Instance Metadata
+
+- Accessible via: `http://169.254.169.254/latest/meta-data/`.
+- Contains details about the instance (e.g., IPs, user data).
+- **Important**: Metadata access is not authenticated or encrypted.
+
 
