@@ -949,7 +949,7 @@ ECS manages:
 - **Cluster in a VPC**: Benefits from multi-AZ resilience.
 - Requires managing EC2 instances (not serverless).
 - Autoscaling Group (ASG): Control horizontal scaling of EC2 instances.
-- **ECR**: Container registry for storing container images.211
+- **ECR**: Container registry for storing container images.
 - Supports:
   - **Spot pricing** for cost-efficiency.
   - Prepaid EC2 for predictable costs.
@@ -967,4 +967,39 @@ ECS manages:
   - Suitable for burst-style, batch, or periodic workloads.
   - Reduces operational overhead for small workloads.
 
+---
 
+### 1.6.4 Elastic Container Registry (ECR)
+
+#### Container Registry
+- **Container Registry**: Repository for storing and sharing container images (e.g., Docker Hub, AWS ECR).
+- Each AWS account has a public and private registry -> Each registry can have many repositories -> Each repository can have many images.
+- Integrated with IAM for permissions
+- Inspector: basic, and enhanced image scanning
+- Metrics: real-time metrics with Cloudwatch (auth, push, pull, etc.)
+- API Actions using Cloudtrail
+- Events -> Eventbridge
+
+### 1.6.5 Kubernetes 101
+
+#### Kubernetes
+- **Kubernetes**: Container-orchestration platform for automating the deployment and scaling of containerized applications.
+- Cluster: A deployment of Kubernetes, management, orchestration.
+- Node: Resources; pods are placed on nodes to run.
+- Pods: Smallest units of computing in Kubernetees. Pods are non-permanent.
+- Service: Abstraction, service running on 1 or more pods.
+- Job: Ad-hoc, creates one or more pods until completion.
+- Ingress: Exposes a way into a service (Ingress => Routing => Service => 1+Pods).
+- Ingress Controller: used to provide ingress (e.g. AWS LB Controller).
+- Persistent Storage (PV) - Volumes
+
+ ![kubernetesStructure](image-1.png)
+
+### 1.6.5 Elastic Kubernetes Service (EKS)
+
+- AWS Managed Kubernetes Service - open source and cloud agnostic
+- AWS, Outposts, EKS Anywhere, EKS Distro
+- Runs on multiple AZs
+- Integrates with AWS services (ECR, ELB, IAM, VPC)
+- EKS Cluster: EKS Control Planes, and EKS Nodes
+- Nodes - Self managed, managed node groups, or Fargate pods
