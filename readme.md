@@ -1,19 +1,20 @@
 <h1 align="center"> SAA-C03 Notes (Dec 2024) </h1>
 <div align="center"> I've put together these notes for the AWS Solutions Architect - Associate (SAA-C03) course by Adrian Cantrill because I couldn’t find any GitHub resources that fit what I was looking for. Most were either outdated, too detailed, or too brief. These notes provide a good balance, summarizing key points in a concise, easy-to-understand format that's perfect for quick review and memorization. For more resources, check out [acantrill's GitHub repo](https://github.com/acantril/aws-sa-associate-saac03). </div>
 
-
 ## Contribute
 
 Contributions to the notes are welcome! If you find any errors or have updated notes, please do me a favor and open an issue or submit a pull request. Thanks! :relaxed:
-
-
 
 ## Table of Contents
 
 1. [AWS Fundamentals](#1-aws-fundamentals)
 2. [IAM, Accounts, and AWS Organizations](#2-iam-accounts-and-aws-organizations)
-3. [Security, Identity, and Compliance](#3-security-identity-and-compliance)
-4. [Virtual Private Clouds (VPC)](#4-virtual-private-clouds-vpc)
+3. [Security, Identity, and Compliance](#3-simple-storage-service-s3)
+4. [Virtual Private Clouds (VPC)](#4-virtual-private-cloud-vpc)
+5. [Elastic Cloud Compute (EC2)](#5-elastic-cloud-compute-ec2)
+6. [Containers and ECS](#6-containers-and-ecs)
+7. [Advanced EC2](#7-advanced-ec2)
+8. [Route 53](#8-route-53)
 
 ## 1 AWS Fundamentals
 
