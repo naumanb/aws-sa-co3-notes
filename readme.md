@@ -1003,3 +1003,120 @@ ECS manages:
 - Integrates with AWS services (ECR, ELB, IAM, VPC)
 - EKS Cluster: EKS Control Planes, and EKS Nodes
 - Nodes - Self managed, managed node groups, or Fargate pods
+
+---
+
+## 1.7 Advanced EC2
+
+### 1.7.1 Bootstrapping EC2 Using User Data
+
+**Bootstrapping**: Automates the configuration of an EC2 instance during launch by running scripts or configuration steps passed as **user data**.
+
+- **Process**:
+  - User data is injected into the instance via the metadata IP: `http://169.254.169.254/latest/user-data`.
+  - Executed once during the first launch.
+  - Used for software installs and configurations.
+
+**Key Points**:
+- EC2 does not validate user data; the OS must understand it.
+- User data size is limited to **16 KB**.
+- User data can be modified by stopping, changing, and restarting the instance, but it won’t re-execute.
+
+**Boot-Time-to-Service Optimization**:
+- Use AMI baking for time-intensive tasks.
+- Reserve bootstrapping for final configuration to reduce service readiness time.
+
+### 1.7.2 AWS::CloudFormation::Init (cfn-init)
+
+`cfn-init`: A helper script for EC2 instances, used for more advanced configuration management.
+
+- Procedural (User Data) or desired state configurations (cfn-init).
+  - E.g., installing specific package versions, managing OS users, and downloading files.
+- Configuration data is passed via CloudFormation templates (`AWS::CloudFormation::Init`).
+
+**CreationPolicy and Signals**:
+- Ensures CloudFormation waits for instance provisioning before marking as complete.
+- Timeout values can be set to prevent premature state changes.
+
+### 1.7.3 EC2 Instance Roles
+
+**IAM Roles** for EC2 provide temporary, auto-rotated credentials via the metadata service:
+
+- Credentials path: `iam/security-credentials/<role-name>`.
+- Best practice: Use IAM roles instead of storing credentials on instances.
+- Automatically integrated with AWS CLI and SDKs.
+
+**Instance Profile**:
+- Links roles to EC2 instances.
+- Created automatically when roles are added via the console.
+
+### 1.7.4 SSM Parameter Store
+
+**Parameter Store** securely stores configuration and secrets (e.g., database strings, passwords):
+
+- Parameter types: Strings, stringlist, and secure strings.
+- Supports plaintext and encrypted strings (via KMS).
+- Features:
+  - Hierarchies and versioning.
+  - Public parameters (e.g., latest AMI IDs).
+  - Accessible via IAM roles.
+
+### 1.7.5 System and Application Logging on EC2
+
+**CloudWatch Agent**:
+- Required to capture instance-level OS logs for **CloudWatch Logs**.
+- Configuration stored in **Parameter Store**.
+
+**IAM Role**:
+- Provides permissions for the CloudWatch Agent to interact with AWS services.
+
+**Log Architecture**:
+- Log groups: Represent individual log types.
+- Log streams: Separate logs per instance.
+
+### 1.7.6 EC2 Placement Groups
+
+#### Cluster Placement
+- Instances are physically close for maximum performance.
+- Use cases: High-speed networking (e.g., **10 Gbps single stream**), low latency.
+- Limitations:
+  - Single AZ only.
+  - Hardware failure impacts all instances.
+- Best practice: Launch all instances at once.
+
+#### Spread Placement
+- Instances are separated for high availability.
+- Use cases: Critical applications requiring resilience.
+- Key points:
+  - Maximum of **7 instances per AZ**.
+  - Supported across multiple AZs.
+
+#### Partition Placement
+- Instances are grouped but separated across partitions.
+- Use cases: Distributed systems like HDFS, Cassandra.
+- Key points:
+  - **7 partitions per AZ**.
+  - Instances can be assigned to specific partitions or auto-placed by AWS.
+
+### 1.7.7 EC2 Dedicated Hosts
+
+Dedicated Hosts allocate physical servers exclusively to your account:
+
+- **Use cases**: License management and compliance.
+- Pricing: On-demand or reserved (1 or 3 years).
+- Limitations:
+  - Some AMIs may not be compatible.
+  - Does not support RDS or placement groups.
+
+### 1.7.8 Enhanced Networking
+
+**Enhanced Networking**:
+- Uses **SR-IOV** for direct hardware access.
+- Benefits:
+  - Higher bandwidth and packets-per-second.
+  - Lower latency and reduced CPU usage.
+
+**EBS Optimization**:
+- Provides dedicated bandwidth for storage networking.
+- Enabled by default on most new instance types at no extra cost.
+
