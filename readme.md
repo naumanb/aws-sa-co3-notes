@@ -1456,7 +1456,7 @@ AWS managed implementation of **Network File System (NFS)** which allows for the
   - **Infrequent Access**: Lower-cost storage for rarely accessed data.
   - Lifecycle policies enable automatic data transitions between classes.
 
-  ## 10.3. AWS Backup
+### 10.3. AWS Backup
 
   - Fully managed data-protection (back/restore) service.
   - Consolidate management into one place ..across accounts and regions.
@@ -1465,6 +1465,7 @@ AWS managed implementation of **Network File System (NFS)** which allows for the
   - Vaults: backup destination (container)
     - **Vault lock**: write-one, read-many (WORM), 72hr cool-off
   - On-Demand backups with Point-in-time recovery.
+
 
 
 
