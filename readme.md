@@ -1406,6 +1406,7 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 - Schema Conversion Tool (SCT) aids in cross-engine migrations.
   - Converting one DB engine to another.
   - Not used between DBs of same type.
+  - Use with AWS Snowball for physical migration of extremely large data.
 
 
 
