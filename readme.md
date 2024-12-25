@@ -1,5 +1,7 @@
 <h1 align="center"> SAA-C03 Notes (Dec 2024) </h1>
-<div align="center"> I've put together these notes for the AWS Solutions Architect - Associate (SAA-C03) course by Adrian Cantrill because I couldn’t find any GitHub resources that fit what I was looking for. Most were either outdated, too detailed, or too brief. These notes provide a good balance, summarizing key points in a concise, easy-to-understand format that's perfect for quick review and memorization. For more resources, check out [acantrill's GitHub repo](https://github.com/acantril/aws-sa-associate-saac03/) </div>
+<div align="center"> I've put together these notes using the AWS Solutions Architect - Associate (SAA-C03) course by Adrian Cantril because I couldn’t find any GitHub resources that fit what I was looking for. Most were either outdated, too detailed, or too brief. These notes provide a good balance, summarizing key points in a concise, easy-to-understand format that's perfect for quick review and memorization for later. For more resources, check out [Cantril's GitHub repo](https://github.com/acantril/aws-sa-associate-saac03/) </div>
+
+*FYI: These notes should only be used to review AWS material. They won't make sense until you've completed a course or have AWS experience.*
 
 ## Contribute
 
@@ -1407,6 +1409,62 @@ Dedicated Hosts allocate physical servers exclusively to your account:
   - Converting one DB engine to another.
   - Not used between DBs of same type.
   - Use with AWS Snowball for physical migration of extremely large data.
+
+## 10. Network Storage & Data Lifecycle
+
+### 10.1. Elastic File System (EFS) Architecture
+
+AWS managed implementation of **Network File System (NFS)** which allows for the creation of shared 'filesystems' which can be mounted within multi-EC2 instances.
+- EFS enables instances to operate closer to a stateless architecture by providing shared file storage.
+
+- **Protocol**: Implements **NFSv4**.
+- **File System**: Created and mounted on Linux systems.
+- **Storage Separation**: Operates independently of EC2 instances.
+  - **EBS**: Block storage for single-instance use.
+  - **EFS**: File storage for shared access.
+- **Shared Access**: Supports multiple EC2 instances.
+- **Private Service**: Isolated to the provisioned VPC.
+  - Accessible through **mount targets** within the VPC.
+- **External Access**: Can be accessed from on-premises.
+  - VPC peering.
+  - VPN connections.
+  - AWS Direct Connect.
+
+- Operates within a VPC with file systems using **POSIX** permissions.
+- **Mount Targets**:
+  - Provisioned with IP addresses from the subnet's range.
+  - For high availability, deploy mount targets across all relevant AZs.
+- Hybrid networking can connect external systems to the same mount targets.
+
+### 10.2. Key EFS Features
+
+- **Linux Only**: EFS supports Linux-based systems.
+- **Performance Modes**:
+  - **General Purpose**:
+    - Optimized for latency-sensitive applications.
+    - Default mode for most use cases.
+  - **Max I/O**:
+    - Designed for high aggregate throughput and IOPS.
+    - May introduce higher latencies.
+- **Throughput Modes**:
+  - **Bursting**:
+    - Functions like GP2 EBS volumes with performance tied to stored data.
+  - **Provisioned Throughput**:
+    - Allows specifying throughput requirements independently of storage size.
+- **Storage Classes**:
+  - **Standard**: For frequently accessed data. Default.
+  - **Infrequent Access**: Lower-cost storage for rarely accessed data.
+  - Lifecycle policies enable automatic data transitions between classes.
+
+  ## 10.3. AWS Backup
+
+  - Fully managed data-protection (back/restore) service.
+  - Consolidate management into one place ..across accounts and regions.
+  - Supports various AWS products: Compute, Block storage, File storage, Databases, and Object Storage.
+  - Backup plans - frequency, windows, lifecycle, vault, region copy.
+  - Vaults: backup destination (container)
+    - **Vault lock**: write-one, read-many (WORM), 72hr cool-off
+  - On-Demand backups with Point-in-time recovery.
 
 
 
