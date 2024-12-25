@@ -1,5 +1,5 @@
 <h1 align="center"> SAA-C03 Notes (Dec 2024) </h1>
-<div align="center"> I've put together these notes for the AWS Solutions Architect - Associate (SAA-C03) course by Adrian Cantrill because I couldn’t find any GitHub resources that fit what I was looking for. Most were either outdated, too detailed, or too brief. These notes provide a good balance, summarizing key points in a concise, easy-to-understand format that's perfect for quick review and memorization. For more resources, check out [acantrill's GitHub repo](https://github.com/acantril/aws-sa-associate-saac03). </div>
+<div align="center"> I've put together these notes for the AWS Solutions Architect - Associate (SAA-C03) course by Adrian Cantrill because I couldn’t find any GitHub resources that fit what I was looking for. Most were either outdated, too detailed, or too brief. These notes provide a good balance, summarizing key points in a concise, easy-to-understand format that's perfect for quick review and memorization. For more resources, check out [acantrill's GitHub repo](https://github.com/acantril/aws-sa-associate-saac03/) </div>
 
 ## Contribute
 
@@ -101,8 +101,6 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 - Root zone delegates authority to TLDs (e.g., `.com`, `.org`).
 - **Registry** manages zones for TLDs.
 - **Registrar** facilitates domain registration under TLDs.
-
----
 
 ## 2 IAM, Accounts, and AWS Organizations
 
@@ -251,8 +249,6 @@ Tracks API activity and user actions for auditing and compliance.
 - **Guard Rails**: Detect/Mandate rules/standards across all accounts
   - Mandatory, Strongly Recommended, or Elective
 - **Account Factory**: Automates and standardizes account creation
-
----
 
 ## 3. Simple Storage Service (S3)
 
@@ -406,8 +402,6 @@ Tracks API activity and user actions for auditing and compliance.
 - Simplify managing access to S3 buckets/objects.
 - Create multiple access points for different use cases, policies, and network access controls.
 - Created via Console or **aws s3control create-access-point** command.
-
----
 
 ## 4 Virtual Private Cloud (VPC)
 
@@ -609,8 +603,6 @@ Tracks API activity and user actions for auditing and compliance.
 
 #### IPv6 Note
 - NAT not required for IPv6; all IPv6 addresses are public.
-
----
 
 ## 5 Elastic Cloud Compute (EC2)
 
@@ -827,7 +819,6 @@ Tracks API activity and user actions for auditing and compliance.
 - Contains details about the instance (e.g., IPs, user data).
 - **Important**: Metadata access is not authenticated or encrypted.
 
----
 ## 6 Containers and ECS
 
 ### 6.1 Intro to Containers
@@ -941,8 +932,6 @@ ECS manages:
 - Integrates with AWS services (ECR, ELB, IAM, VPC)
 - EKS Cluster: EKS Control Planes, and EKS Nodes
 - Nodes - Self managed, managed node groups, or Fargate pods
-
----
 
 ## 7 Advanced EC2
 
@@ -1058,9 +1047,9 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 - Provides dedicated bandwidth for storage networking.
 - Enabled by default on most new instance types at no extra cost.
 
----
-
 ## 8. Route-53
+
+- Note: Routing policies listed at the bottom of this section.
 
 ### 8.1. Public Hosted Zones
 
@@ -1099,12 +1088,7 @@ Dedicated Hosts allocate physical servers exclusively to your account:
   - No charge for ALIAS requests.
   - **DEFAULT** option for AWS services.
 
-### 8.4. Simple Routing
-
-- **Simple Routing**: Route traffic to a single service/resource.
-- Doesn't support health checks.
-
-### 8.5. Route 53 Health Checks
+### 8.4. Route 53 Health Checks
 
 - Health checks allow periodic monitoring of servers and resources.
 - Unhealthy servers are automatically removed; healthy ones are re-added.
@@ -1131,9 +1115,7 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 - Default: Every **30 seconds**.
 - Optional: **10-second checks** (higher cost).
 
-### 8.6. Route 53 Routing Policies
-
-#### Examples
+### 8.5. Route 53 Routing Policies
 
 1. **Simple Routing**:
    - Routes traffic to a single resource.
@@ -1145,28 +1127,286 @@ Dedicated Hosts allocate physical servers exclusively to your account:
    - Uses health checks to implement active-passive failover.
    - If primary fails, secondary is used.
 
-3. **Weighted Routing**:
+3. **Multi-Value Routing**:
+   - Similar to simple routing but incorporates health checks. Combination of Simple Routing and Failover Routing.
+   - Responds with all healthy records, removing unhealthy ones.
+   - **Use case**: Reliability improvement and lightweight alternative to failover.
+
+4. **Weighted Routing**:
    - Multiple records of the same name with assigned weights.
    - Distributes traffic based on weights.
    - Skips unhealthy records.
    - **Use case**: Gradual migrations or traffic distribution.
 
-4. **Latency-Based Routing**:
+5. **Latency-Based Routing**:
    - Directs traffic to the region with the lowest latency for the user.
    - Multiple records of the same name and type.
 
-5. **Geolocation Routing**:
+6. **Geolocation Routing**:
    - Matches queries based on:
-     1. **Country**.
-     2. **Continent**.
-     3. **Default** (if no specific match).
+     1. **State**
+     2. **Country**.
+     3. **Continent**.
+     4. **Default** (if no specific match).
+   - **NOT about closest record or proximity.** It retuns relevant locations only! Route traffic based on location of customers.
    - **Use case**: Licensing or region-specific responses.
    - Overlapping regions prioritize the most specific match.
 
-6. **Multi-Value Routing**:
-   - Similar to simple routing but incorporates health checks.
-   - Responds with all healthy records, removing unhealthy ones.
-   - **Use case**: Reliability improvement and lightweight alternative to failover.
+7. **Geoproximity Routing**:
+   - Routes traffic based on geographic location and your resources.
+   - Similar to Latency-based, but is based **distance** instead of latency.
+   - **Bias**: Expands or shrinks the size of a geographic region from which traffic is routed to a specific resource.
 
----
+### 8.6. Route 53 Interoperability
+
+- Route 53 can be used as both **Domain Registrar** and **Domain Hosting**, but they both function **independently**.
+- As a hoster:
+  1) Allocates 4 name servers (NS)
+  2) Creates a zone file on the above NS
+- As a registrar:
+  1) Accepts your money
+  2) Communicates with registry of TLD
+  3) Sets NS records for domain to point at the 4 NS
+
+### 8.7. DNSSEC with Route53
+
+- DNSSEC: Strengthens authentication in DNS using digital signatures based on public key cryptography.
+- "Adds a layer of security by enabling authenticated answers on top of an otherwise insecure protocol. Whereas HTTPS encrypts traffic so nobody on the wire can snoop on your Internet activities, DNSSEC merely signs responses so that forgeries are detectable." - Cloudflare
+
+## 9. Relational Database Service (RDS)
+
+### 9.1. Database Refresher
+
+#### Relational (SQL)
+
+- SQL databases use **schemas** to define structured data with predefined relationships.
+  - Schema specifies names, valid values, and data types.
+- Tables include:
+  - **Primary keys**: Unique identifiers for every row in each table.
+  - Relationships between tables defined by **foreign keys** and **join tables**. 
+- Relationships must be defined in advance, which can be challenging.
+
+#### Non-Relational (NoSQL)
+
+- NoSQL databases often lack a fixed schema or have a weak one.
+
+**Key-Value Databases**
+
+- Stores data as unique key-value pairs.
+- Highly scalable and fast; ideal for **in-memory caching**.
+
+**Wide Column Store**
+
+- Example: DynamoDB.
+- Uses **partition keys** and optional **sort keys**.
+- Attributes can vary by item but must have unique keys.
+
+**Document Databases**
+
+- Stores data in JSON or XML format.
+- Suitable for nested data structures, e.g., user profiles.
+
+**Row Databases (MySQL)**
+
+- Optimized for transactional operations (OLTP).
+- Best for frequent row-based queries.
+
+**Column Databases (Redshift)**
+
+- Stores data by columns, ideal for analytics and reporting.
+
+**Graph Databases (AWS Neptune)**
+
+- Nodes represent entities, and edges define relationships.
+- Excellent for relationship-driven data like social networks.
+
+### 9.2. ACID vs BASE
+
+- **CAP Theorem**: Consistency, Availability, and Partition Tolerance
+  - Consistency: Every read will receive the most recent write.
+  - Availability: Every request will receive a non-error response.
+  - Partition Tolerance: System will continue to operate even if there are dropped messages or errors.
+  - Any database is capable of delivering only 2 of these.
+
+- **ACID**: Focuses on Consistency. Used by Financial Institutions.
+  - RDS databases
+  - **A**tomicity: All or None components of transaction are executed.
+  - **C**onsistency: Databases only moves from one valid state to another.
+  - **I**solation: Transactions don't interfere with each other.
+  - **D**urability: Transactions stay committed even if system fails.
+  
+- **BASE**: Focuses on Availability
+  - NoSQL databases like DynamoDB
+  - **B**asically **A**vailable: Read and Write operations available as much as possible.
+  - **S**oft state: Database doesn't enforce consistency, it's offloaded to application.
+  - **E**ventually Consistent: Consistency will eventually happen, if we wait long enough.
+  - Advantage: High scalable and high performance.
+
+### 9.3. Databases on EC2
+
+*Generally considered bad practice in AWS*
+
+#### Reasons for EC2 Databases
+
+- Need OS-level access for advanced configurations.
+- Unsupported database types or versions on RDS.
+
+#### Drawbacks of EC2 Databases
+
+- High **administrative overhead** and disaster recovery complexity.
+- Limited to one AZ; prone to failures.
+- Miss out on RDS features like automated scaling and replication.
+
+### 9.3. Relational Database Service (RDS)
+
+- Managed **Database-Server-as-a-Service (DBSaaS)** for engines like MySQL, PostgreSQL, Oracle, and SQL Server.
+  - Multiple databases on one DB server (instance).
+  - Dedicated storage per instance provided by EBS.
+  - Can use read-replicas to different regions for HA.
+  - Backups & Snapshots can be made to S3.
+- Costs based on instance size/type, multi-az, storage type, data transferred, backups, and licensing.
+- Instance types:
+  - **General** (e.g., `db.m5`), **Memory-optimized** (e.g., `db.r5`), and **Burst** (e.g., `db.t3`).
+- Storage options: SSD (`io1`, `gp2`) or magnetic.
+
+### 9.4. RDS Multi-AZ (High Availability)
+
+**Multi-AZ - Instance**
+- Standby replica in a different AZ with **synchronous replication**.
+- Failover (replica becomes primary) within 60-120 seconds during a primary instance failure.
+- Backups occur on standby replicas to minimize performance impact.
+- Only 1 standby replica.
+
+**Multi-AZ - Cluster**
+- **1 Writer** synchronously replicates to **2 Readers** in different AZs.
+- Compared to standby in Instance mode, readers are usable.
+- Writer can do **write** and **read**. Readers can only be used for **read-only** operations.
+- Failover is faster (~35s) as replication is done via transaction logs.
+- Cluster endpoint points at the writer.
+- Reader endpoint directs reads to any available reader OR writer.
+- Instance endpoint point to a specific instance (usually for testing).
+
+### 9.5. RDS Backup and Restores
+
+- Two types of backups: Automated Backups and Snapshots.
+  - Both stored in AWS-managed S3 (*NOT VISIBLE TO USER*).
+- **Snapshots** take a full copy of the database.
+  - First snapshot is full; subsequent snapshots are incremental.
+  - Snapshot don't expire, live on past the RDS instance.
+- **Automated Backups**: basically automated snapshots.
+  - Occur during a backup window.
+  - Transaction logs saved every 5 minutes enable point-in-time recovery.
+  - Automatically cleared by RDS. Retention b.w. 0 to 35 days.
+- RDS can be configured to replicate backups to other regions.
+- **Recovery Point Objective (RPO):** Max allowable data loss.
+- **Recovery Time Objective (RTO):** Time to full recovery after failure.
+- Restores create new RDS instances.
+  - Snapshots - single point in time.
+  - Automated Backups - any 5 minute point in time.
+
+### 9.6. RDS Read-Replicas
+
+- Uses **asynchronous replication** for scaling reads and global resilience.
+  - Data written to primary first, then to replicas.
+- Compared to Multi-AZ Cluster, Read-Replicas aren't part of main database instance.
+  - Have their own endpoints.
+- Up to 5 replicas per database instance.
+- Supports cross-region replication.
+- Can promote replicas for write operations during failure.
+- Compared to Snapshots & Backups, Read-Replicas have much better RPO and RTO. 
+
+### 9.7. RDS Security
+
+#### Encryption
+- Supports EBS volume encryption via KMS.
+- Data keys used for encryption operations - AWS or Customer Manager CMK.
+- Storage, snapshots, and replicas can be all encrypted, but it cannot be removed once added.
+- **Transparent Data Encryption (TDE)**: Data encrypted within DB engine, not host.
+- RDS Oracle supports CloudHSM (customer managed keys, hidden to AWS).
+
+#### IAM Authentication
+- RDS Local DB account can be configured to use AWS Authentication Token.
+- Policies attached to Users or Roles can be used to `generate-db-auth-token`.
+  - Token has 15min validity & can be used in place of DB User Password.
+- Note: Authentication ONLY, NOT Authorization.
+
+### 9.8. RDS Custom
+
+- Fills the gap b.w. RDS and EC2 running a DB engine.
+- Works for MS SQL & Oracle
+- Can connect using SSH, RDP, Session Manager
+- Can configure; scaling, HA, backups, DB patches, OS patches, & OS install.
+
+### 9.9. Amazon Aurora
+
+*Very different from RDS*
+
+- High-performance relational database with:
+  - 1 **Primary** and up to **15 Replica** DB instances.
+  - **Cluster architecture**: Shared SSD-based storage (up to 64 TiB) and 6 replica storage nodes.
+  - Automatic replication across multiple AZs.
+  - Faster provisioning and improved availability.
+- Separate storage layer for data.
+- Only primary instance can write to storage.
+
+**Aurora Endpoints**
+
+- **Cluster Endpoint**: Points to primary instance for reads and writes.
+- **Reader Endpoint**: Load balances read replicas.
+
+**Costs**
+
+- No free-tier option.
+- Compute billed per second; storage billed at high watermark (GB-Month).
+- Free backups up to database size.
+
+**Restore, Clone, and Backtrack**
+
+- Restores create a new cluster.
+- **Backtrack**: Roll back to a previous state.
+- **Fast Clones**: Efficient storage sharing with minimal overhead.
+
+### 9.10. Aurora Serverless
+
+- Automatically scales with demand using **Aurora Capacity Units (ACUs)**.
+- Users don't connect directly to the DB instances, but to a proxy instance.
+- Ideal for new, unpredictable, or infrequent workloads.
+- Billed per second for resources used, instead of instances provisioned.
+
+### 9.11. Aurora Global Database
+
+- Replicates data across up to 5 secondary regions with 16 replicas each.
+- Storage-level replication ensures low latency (~1 second).
+- Enhances disaster recovery and global read scaling.
+
+### 9.12. Aurora Multi-Master Writes
+
+- Supports multiple read/write nodes in a cluster.
+- Ensures high availability with fast failover.
+
+### 9.13. RDS Proxy
+
+- Fully managed, highly available database proxy for RDS.
+- Instead of applications connecting directly to DB, they connect to the proxy.
+  - **Application(s) => Proxy (connection pooling) => Database**.
+  - Much quicker to establish vs direct DB connection.
+- Proxy maintains long-term Connection Pool with DB instances.
+- Only accessible from a VPC and via Proxy Endpoint.
+- Use cases:
+  - Too many connection errors
+  - AWS Lambda
+  - Long running apps
+
+### 9.14. Database Migration Service (DMS)
+
+- Managed service for migrating databases.
+- Replication instance performs migration b.w. Source and Destination endpoints
+  - One endpoint MUST be on AWS.
+- Supports **Full-load** (one-off migration of all data), **Full-load + Change Data Capture (CDC)**, and **CDC-only** migrations.
+- Schema Conversion Tool (SCT) aids in cross-engine migrations.
+  - Converting one DB engine to another.
+  - Not used between DBs of same type.
+
+
+
 
