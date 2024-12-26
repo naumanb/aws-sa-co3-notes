@@ -407,7 +407,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ## 4 Virtual Private Cloud (VPC)
 
-### 4.1 Networking Refresher
+### 4.1. Networking Refresher
 
 #### IPv4 - RFC 791 (1981)
 - Uses **dotted decimal notation**: 4 numbers (0-255) separated by periods.
@@ -452,7 +452,7 @@ Tracks API activity and user actions for auditing and compliance.
 - CIDR notation applies, e.g., `2001:db8::/48` spans addresses `2001:db8:0000::` to `2001:db8:ffff::`.
 - `::/0` covers all IPv6 addresses.
 
-### 4.2 VPC Sizing and Structure
+### 4.2. VPC Sizing and Structure
 
 #### VPC Considerations
 - **Size**: Plan VPC size to avoid overlap with other VPCs or cloud networks.
@@ -466,7 +466,7 @@ Tracks API activity and user actions for auditing and compliance.
 - Best practice: Use at least **4 AZs** with separate tiers (web, app, DB, spare).
 - Example: Splitting `/16` into `/20` provides **16 subnets**.
 
-### 4.3 Custom VPC
+### 4.3. Custom VPC
 
 #### Features
 - **Regionally isolated and resilient**.
@@ -486,7 +486,7 @@ Tracks API activity and user actions for auditing and compliance.
     - **DNS Hostnames**: Assign public DNS to instances.
     - **DNS Resolution**: Enable VPC DNS access.
 
-### 4.4 VPC Subnets
+### 4.4. VPC Subnets
 
 #### Subnet Features
 - **AZ-resilient**: Subnets fail if the AZ fails.
@@ -510,7 +510,7 @@ Tracks API activity and user actions for auditing and compliance.
 - **Public IPv4**: Enabled to make subnets public.
 - **IPv6**: Requires subnet and VPC IPv6 allocations.
 
-### 4.5 VPC Routing and Internet Gateway (IGW)
+### 4.5. VPC Routing and Internet Gateway (IGW)
 
 #### VPC Router
 - Moves traffic between subnets.
@@ -540,7 +540,7 @@ Tracks API activity and user actions for auditing and compliance.
 - **IPv6**: Public by default; no translation needed.
 
 #### Bastion Host / Jumpbox
-
+*Not recommended anymore*
 - An instance in public subnet where incoming management connections arrive.
 - Used as an inbound management point, or as an entry point for private-only VPCs.
 
@@ -552,7 +552,7 @@ Tracks API activity and user actions for auditing and compliance.
 - **Stateful**: Can identify the request and response components of a connection as being related.
   - Allowing request means response is automatically allowed.
 
-### 4.6 Network Access Control Lists (NACLs)
+### 4.6. Network Access Control Lists (NACLs)
 
 #### Features
 - **Stateless**: Separate inbound and outbound rules.
@@ -573,7 +573,7 @@ Tracks API activity and user actions for auditing and compliance.
   - Explicit deny (e.g., blocking bad IPs).
   - Non-SG-compatible resources (e.g., NAT Gateways).
 
-### 4.7 Security Groups (SGs)
+### 4.7. Security Groups (SGs)
 
 #### Features
 - **Stateful**: Tracks inbound/outbound traffic automatically.
@@ -587,7 +587,7 @@ Tracks API activity and user actions for auditing and compliance.
 - Use SGs as the default for most configurations.
 - Combine with NACLs for explicit deny scenarios.
 
-### 4.8 Network Address Translation (NAT) Gateway
+### 4.8. Network Address Translation (NAT) Gateway
 
 #### Features
 - Gives Private CIDR range **outgoing** internet access.
@@ -1466,7 +1466,199 @@ AWS managed implementation of **Network File System (NFS)** which allows for the
     - **Vault lock**: write-one, read-many (WORM), 72hr cool-off
   - On-Demand backups with Point-in-time recovery.
 
+## 11. High Availability & Sclaing
 
+### 11.1. Regional & Global AWS Architecture
 
+- Global Architecture: Service location & discovery, content delivery (CDN), health checks & failover.
+  - CDNs (such as CloudFront) cache content gobally to improve performance.
+
+- Regional Architecture: Entry points, scaling & resilience, application services and components.
+  - At this level, environments will have various tiers for applications:
+    - **Web Tier**: Entry point for regional-based applications.
+      - Application Load Balancer (ALB), API Gateway, etc.
+    - **Compute Tier**: Compute services fetches through Web Tier.
+      - EC2, Lambda, Containers (ECS).
+    - **Storage Tier**: Storage services used by Compute.
+      - EBS, EFS, S3.
+    - **Data Tier**: Data services used by various tiers.
+      - RDS, DynamoDB, Aurora.
+      - Typically accessed via **Caching layer** (ElastiCache, DynamoDB Accelerator).
+    - **App Services Tier**: Other services that provide functionality for apps.
+      - Kinesis, Step Functions, SQS, SNS, etc.
+
+### 11.2. Evolution of Elastic Load Balancer (ELB)
+
+Using a single server can lead to performance issues or downtime. Multiple servers solve this but introduce challenges:
+- Uneven load distribution.
+- Failed instances may still appear in DNS cache due to TTL values.
+
+Three types of load balancers (ELB) within AWS between v1 and v2:
+- *Classic Load Balancer (CLB)* was the first AWS load balancer - v1 - introduced in 2009.
+  - Not really layer 7, lacking features.
+- **Application Load Balancer (ALB)** - v2.
+  - HTTP/S/WebSocket.
+- **Network Load Balancer (NLB)** - v2.
+  - TCP, TLS, UDP.
+  - Ex: Email servers, or SSH servers.
+
+V2 balancers are faster, cheaper, support target groups, and rules.
+
+### 11.3. Elastic Load Balancer Architecture
+
+Load balancers: Accept connections & requests from users and distribute them to backend services.
+- Choose **IPv4** or **Dual stack (IPv4 and IPv6)**.
+- Select **1 subnet** in 2 or more AZs to place Load Balancer (ELB) Nodes.
+  - 1 Node in each AZ.
+
+#### Internet-facing (public) ELBs
+- Internet-facing ELB can connect to both public and private instances.
+- Each ELB is configured with 'A' record DNS name which resolves to ELB Nodes.
+- Need **8+ free IPs** per subnet; **/27** or larger to scale.
+
+#### Internal (private) ELBs
+- Internal ELB can connect to private instances only.
+- Used to allow scaling between application tiers (web, computer, db).
+- ELBs can be placed b.w. tiers in combination with Auto Scaling Groups (ASG).
+  - Decouple the tiers to operate and scale independently.
+
+#### Cross-Zone Load Balancing
+- Ensures even distribution equally across instances in different AZs.
+- Targets are grouped in **target groups**, and routing rules direct traffic to these groups.
+
+#### Key points:
+- ELB is a DNS 'A' record pointing at 1+ nodes per AZ.
+- Nodes (in 1 subnet per AZ) can scale.
+- Two types: Internet-facing, and Internal.
+  - Internet-facing: Connects to **BOTH public AND private** instances.
+  - Internal: Connects to private instances.
+- Instances don't need to be public to work with ELB.
+- Listener Configuration controls WHAT the LB does.
+- **8+ free IPs** per subnet; **/27** or larger to scale.
+
+### 11.4. Application Load Balancer (ALB) vs Network Load Balancer (NLB)
+
+CLBs (v1) dont scale. Every unique HTTPS name requires individual CLB (1 SSL per CLB).
+V2 load balancers support rules and **target groups**.
+- Host based rules using SNI and an ALB allows consolidation (1 SSL per rule).
+
+#### Application Load Balancer (ALB)
+
+ALB operates at Layer 7 (Application Layer) of the OSI model. 
+- It can only inspect HTTP/HTTPS traffic and make routing decisions based on paths, headers, or hosts.
+- L7 content type, cookies, custom headers, user location, and app behaviour.
+- ALBs must have SSL certs if HTTPS is used.
+- ALBs are slower than NLBs.
+- Health checks evaluate application health (layer 7).
+- Billing based on hourly rate and **Load Balancer Capacity Unit (LCU)** usage.
+
+ALB Rules:
+- Rules direct connections which arrive at a listener.
+- Processed in priority order.
+- Default rule = catchall.
+- Rule conditions: host-header, http-header, http-request-method, path-pattern, query-string, source-ip.
+- Actions: forward, redirect, fixed-response, authenticate-cognito, authenticate-oidc.
+
+#### Network Load Balancer (NLB)
+
+NLB operates at Layer 4 (Transport Layer) of the OSI model.
+- TCP, TLS, UDP, TCPs_UDP.
+- No visibility or understanding of HTTP/HTTPS.
+- No headers, no cookies, no session stickiness.
+- VERY Fast (must faster than ALBs). Good for SSH, Financial apps, Game servers, etc.
+- Health checks aren't app aware, just check ICMP/TCP handshake.
+- For unbroken encryption, can use NLBs to forward TCP instances.
+
+#### ALB VS NLB (Exam Tips)
+
+- Unbroken encryption  => Use NLB.
+- Static IP for whitelist => Use NLB.
+- Fastest performance => Use NLB.
+- Protocols not HTTP or HTTPs => Use NLB.
+- Privatelink => Use NLB.
+- Otherwise => Use ALB.
+
+### 11.5. Launch Configuration and Templates
+
+Define instance configurations in advance:
+- Includes AMIs, instance types, storage, security groups, and IAM roles.
+- **Launch Templates (LTs)** are preferred over **Launch Configurations (LCs)** due to added features like versioning and T2/T3 unlimited.
+- Both are immutable; changes require creating a new version.
+- Used by Auto Scaling Groups (ASG) to configure instances to launch.
+- Launch Templates can be used to directly create EC2 instances from console UI/CLI.
+
+### 11.6. Autoscaling Groups (ASG)
+
+Enable automatic scaling and self-healing for EC2 instances. ASGs use LCs or LTs to provision instances and maintain a specified capacity.
+- Have a **Minimum, Desired, and Maximum** size. For ex. 1:2:4 means 1 min, 2 desired, 4 max.
+- ASG keeps running instances to the desired capacity by provisioning or terminating instances.
+- *FREE*. Only billed for created resources.
+- Granularity: more, smaller instances.
+- **Cooldown Period** prevents excessive scaling actions.
+- **Self-healing**: If EC2 instance fails, it passes info to ASG, which terminates instance and provisions a new one.
+- ASG defines **when and where**, while LTs define **what**.
+
+#### Scaling Policies
+Defined rules which can adjust values for ASGs:
+1. **Manual Scaling**: Adjust desired capacity manually.
+2. **Scheduled Scaling**: Predefined time-based scaling.
+3. **Dynamic Scaling**: Simple, Step, and Target scaling.
+
+#### Dynamic Scaling
+**Simple**: Add/remove instances based on a single metric.
+- For ex. If CPU exceeds 50%, add an instance.
+**Step**: Adjust based on predefined thresholds. 
+- For ex. If CPU b.w. 50-60%, add 1 instance. If between 60-80%, add 2 instances. etc.
+**Target**: Maintain a target metric value.
+- For ex. Maintain target of 60% CPU utilization on average, add or remove instances as needed.
+
+#### ASG + Load Balancers
+- ASGs can be connected to ELBs to make application more elastic.
+- ASG Instances can be automatically added to or removed from target groups of ELBs.
+- ASG can use load balancer health checks rather than EC2 status checks for App Awareness.
+
+#### Scaling Processes
+- Launch and Terminate - suspend and resume.
+- AddToLoadBalancer - add to LB on launch.
+- AlarmNotification - accept notification from CW.
+- AZRebalance - balances instances across AZs.
+- HealthCheck - check health of instances.
+- ReplaceUnhealthy - replace unhealthy instances.
+- ScheduledActions - schedule on/off.
+- Standby - for instances to standby.
+
+#### ASG Lifecycle Hooks
+Enable you to perform custom actions by pausing instances as an ASG launches or terminates them.
+- Instances are paused within the flow until:
+  - A timeout (1 hour by default).
+  - CompleteLifecycleAction command.
+- Use case: Load, Index, or Backup data.
+
+#### ASG Health Checks
+**EC2 Health Checks** (Default): Check EC2 instance status.
+- Unhealthy: Stopping, stopped, terminated, shutting down, or impaired (not 2/2 status).
+**ELB Health Checks**: Check ELB status.
+- ALBs can provide Layer 7 (HTTP/HTTPS) status checks.
+**Custom Health Checks**: Instances marked healthy or unhealthy by external system.
+- Health check grace period (Default 300s): Delay before starting checks.
+
+### 11.7. SSL Offload and Session Stickiness
+#### SSL Modes
+1. **Bridging**: Load balancer decrypts and re-encrypts traffic between clients and servers. Allows inspection of HTTP data.
+2. **Pass-through**: Traffic remains encrypted end-to-end. Load balancer (NLB) does not require SSL certificates.
+3. **Offload**: Load balancer decrypts traffic; backend servers handle plain HTTP traffic. Simplifies server configurations but sends unencrypted data internally.
+
+#### Session Stickiness
+Ensures requests from the same client are routed to the same server.
+- ALBs generate cookies for stickiness with durations of 1 second to 7 days.
+- Stickiness can cause uneven backend loads; storing session data externally (e.g., DynamoDB) is recommended for stateless instances.
+
+### 11.8. Gateway Load Balancer (GWLB)
+
+Help you run and scale 3rd party appliances.
+- Deploy, scale, and manage firewalls, intrusion detection and prevention systems, and deep packet inspection systems
+- Transparent inspection and protection of Inbound and Outbound traffic.
+- GWLB endpoints: traffic enters/leaves via these endpoints.
+- GWLB balances across multiple backend appliances.
 
 
