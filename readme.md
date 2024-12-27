@@ -1538,7 +1538,7 @@ Load balancers: Accept connections & requests from users and distribute them to 
 
 ### 11.4. Application Load Balancer (ALB) vs Network Load Balancer (NLB)
 
-CLBs (v1) dont scale. Every unique HTTPS name requires individual CLB (1 SSL per CLB).
+CLBs (v1) dont scale. Every unique HTTPS name requires individual CLB (1 SSL per CLB).\
 V2 load balancers support rules and **target groups**.
 - Host based rules using SNI and an ALB allows consolidation (1 SSL per rule).
 
@@ -1661,4 +1661,437 @@ Help you run and scale 3rd party appliances.
 - GWLB endpoints: traffic enters/leaves via these endpoints.
 - GWLB balances across multiple backend appliances.
 
+# Serverless and Application Services
 
+## 12.1. Architecture Evolution
+
+### Monolithic Architecture
+
+- Single entity with all components tightly integrated.
+- System-wide failures occur if one component fails.
+- Scaling is tied to the entire system, requiring all components to run on the same hardware.
+- High operational costs due to always-on components.
+
+### Tiered Architecture
+- Components distributed across servers with load balancers for scalability.
+ - Components can be scaled independently. For ex. with Load Balancers and ASGs.
+- Tiers still remain coupled, where failure in one affects others.
+- Responses/communication must be operational even if no meaningful processing occurs.
+
+### Evolving with Queues
+- Data processed asynchronously using queues.
+- Uploads added to a queue with autoscaling for capacity as needed.
+- Queue ensures decoupling between upload and processing tiers.
+- Processing tier fetches data from queues rather than directly from upload tier.
+
+### Microservices Architecture
+- Independent microservices with distinct logic and data stores.
+- Producers generate data; consumers process data.
+- Communication via events and queues ensures decoupling.
+
+### Event-Driven Architecture
+- Producers generate events when something happens (e.g., clicks, errors).
+- Consumers react to events, taking actions only when events occur.
+- **Event Router** and Event Bus ensure efficient delivery and resource utilization.
+- Resources are consumed only during event handling, enabling serverless operations.
+
+## 12.2. AWS Lambda
+
+Function-as-a-Service (FaaS) that executes code in response to events - short running and focused.
+- Lambda function - a piece of code lambda runs.
+- Runs in runtime environments (eg. Python 3.8) with billing based on execution duration.
+- A key part of Serverless architecture.
+
+### Lambda Architecture
+Lambda function = Unit of configuration. Package of Code + Configurations.\
+When Lambda function is invoked, deployment package is downloaded and executed in a runtime environment.\
+Common Runtimes: Python, Ruby, Java, Go, C#.\
+Runtime environments are allocated w/ certain amount of memory and CPU.
+- vCPU allocated indirectly based on memory used.
+
+Note: Docker ≠ Lambda
+
+Lambda functions are **stateless**; no data is left from a previous invocation.
+- Stateless design requires external data storage (e.g., DynamoDB, S3).
+
+**Function timeout**: Lambda function run for up to a limit of **15 minutes (900s)**.
+- Supports event-driven and manual invocation.
+- Execution environment is new for each invocation and is ephemeral.
+
+Security of Lambda is controller using **Execution Roles** (IAM Roles).
+
+Common Uses:
+- Serverless Applications (S3, API Gateway, Lambda).
+- File Processing (S3, S3 Events, Lambda).
+- Database Triggers (DynamoDB, Streams, Lamnda).
+- Serverless CRON (Eventbridge/CWEvents + Lambda).
+- Realtime Stream Data Processing (Kinesis + Lambda).
+
+### Lambda Networking
+Two types: Public, and VPC Networking
+
+**Public**:
+- Lambda function are Public by default.
+- They can access public AWS services and public internet.
+- Best performance - no customer service VPC networking required.
+- No access to private VPC services.
+
+**VPC Networking**:
+- Lambda within VPCs can access other VPC resources, but not public resources.
+- To access external resources (such as DynamoDB), you must create a VPC endpoint.
+- Use NAT gateway with IGW to access internet.
+
+### Lambda Security & Logging
+**Execution Role**: IAM role that Lambda uses to access other AWS services.
+
+**Resource Policy**: Controls what services and accounts can invoke Lambda functions.
+Lambda uses CloudWatch, CloudWatch Logs, & X-Raw.
+- **CloudWatch Logs** = Logging from executions. Requires permission via Execution Role.
+- **CloudWatch** = Metrics (success/failure, retries, latency, etc).
+- **X-Raw** = Distributed tracing.
+
+### Invocation Types
+Synchronous invocation, asynchronous invocation, and event-source mappings.
+
+**Synchronous**:
+- CLI/API directly invokes lambda function, passing data, and waiting for response.
+- Lambda responds with response or fails.
+- Result (success/failure) returned during requests as client waits.
+- Errors or Retries have to be handled by client.
+
+**Asynchronous**:
+- Typically used when AWS services invoke lamnda functions.
+- Client/Services don't wait for response, they stop tracking.
+- Lambda responsible for handling errors and retries.
+- **Dead Letter Queue (DLQ)** is sent events after repeated failed attempts.
+
+**Event Source Mappings**:
+- Typically used on streams or queues which don't support event generation to invoke lambda (Kinesis, DynamoDB, SQS).
+- Source isn't delivering event, Event Source Mapping is polling/reading that source for source batches.
+- Permissions from Execution Role are used by Event Source Mapping to interact with event source.
+
+### Versions
+Lambda functions can have multiple versions - v1, v2, v3.
+- Version: Code + Configurations.
+- Immutable - never changes once published. Has it's own ARN.
+- `$Latest` - points at latest version
+- Aliases can point at a specific version (can be changed).
+
+### Execution Context
+Execution context is the environment that Lambda runs in.
+- **Cold Start**: Full creation and configuration of context including download of function code - ~100ms.
+- **Warm Start**: Same execution context is reused, context creation can be skipped.
+- If used infrequently, contexts will be removed.
+Provisioned concurrency can be used to keep contexts warm.
+
+## 12.3. CloudWatch Events and EventBridge
+CloudWatch Events: Near real-time stream of system events (changes in AWS Services).
+
+**EventBridge**: basically CW Events v2.
+- Replacing CW Events + handle third-party event handling and additional features.
+- **Event buses** manage streams of events for processing.
+- Rules match incoming events or schedules, delivering them to defined targets.
+  - Event Pattern Rules: Match specific events.
+  - Schedule Rules: Run on a schedule.
+- JSON structures represent events for flexible consumption.
+
+## 12.4. Serverless
+
+Serverless architecture minimizes server management, aiming to reduce overhead and risk. 
+- Applications are composed of small, specialized functions that perform specific tasks efficiently and stop after execution. 
+- These functions are stateless and operate in ephemeral environments, retrieving necessary data, performing actions, and optionally storing or delivering the results elsewhere.
+
+**Key Characteristics**:
+- **Stateless Functions**: No persistent state; each function execution starts fresh.
+- **Ephemeral Environments**: Runtime environments are temporary and recreated for every function invocation.
+- **Event-Driven**: Functions execute only when triggered by events, leading to minimal costs during idle periods.
+- **Function-as-a-Service (FaaS)**: Services like AWS Lambda are ideal for general-purpose compute needs and are billed based on execution time.
+
+**Best Practices**:
+1. **Leverage Managed Services**: Use existing services instead of building custom solutions.
+   - Examples:
+     - **S3** for object storage.
+     - **DynamoDB** for data storage.
+     - Third-party identity providers (e.g., Google, Twitter, Active Directory) for authentication.
+   - AWS tools like **Elastic Transcoder** can handle tasks like media conversion.
+2. **Optimize Code**: Minimize custom coding and rely on "as-a-Service" offerings to construct the application.
+3. **Efficient Resource Usage**: Serverless environments consume resources only during active processing, reducing costs.
+
+### Example of a Serverless Workflow
+
+**Scenario**: A user uploads a video to a website for transcoding.
+
+1. **Frontend Interaction**:  
+   - User accesses a static website running the video uploader.  
+   - JavaScript executes directly in the user’s browser.  
+
+2. **Authentication**:  
+   - The user is authenticated through a third-party provider (e.g., Google) using a token.  
+   - AWS **Cognito** converts the third-party token into temporary AWS credentials.  
+
+3. **Video Upload**:  
+   - The service uses temporary credentials to upload the video to an **S3 bucket**.  
+
+4. **Event Trigger**:  
+   - Once the upload is complete, S3 generates an event.  
+
+5. **Transcoding**:  
+   - A **Lambda function** is triggered to transcode the video.  
+   - The transcoder retrieves the original video from the S3 bucket and performs its task.  
+
+6. **Output Storage**:  
+   - The transcoded video is saved to a new S3 **transcode bucket**.  
+   - Metadata about the video is stored in **DynamoDB**.  
+
+7. **User Access**:  
+   - The user interacts with another Lambda function to access the transcoded media.  
+   - The function retrieves the data from the transcode bucket using the DynamoDB entry.  
+
+This workflow highlights the efficient, event-driven, and modular nature of serverless architecture, emphasizing minimal resource usage and reliance on managed services.
+
+## 12.5. Simple Notification Service (SNS)
+
+AWS SNS is a high-availability, durable, and scalable **PUB/SUB messaging service** that coordinates sending and delivering messages.
+
+- **Access:** Requires network connectivity to AWS public endpoints, allowing access from anywhere with the necessary connectivity.
+- **Message Size:** Supports payloads up to 256KB (not suitable for large binary files).
+
+### Key Components:
+- **SNS Topics:**
+  - Base entities for organizing messages.
+  - Configurable permissions for access control.
+  - Publishers send messages to topics.
+- **Subscribers:**
+  - Receive all messages from subscribed topics.
+  - Supported endpoints: HTTP/HTTPS, email, SQS queues, mobile push notifications, SMS, and Lambda.
+
+### Common Use Cases:
+- Notifications for AWS services like CloudWatch (state changes), CloudFormation (stack updates), and Auto Scaling (scaling events).
+- Fanout pattern: A single topic sends messages to multiple SQS queues for varied processing workflows.
+
+### Features:
+- **Filters:** Control which messages are delivered to specific subscribers.
+- **Delivery Status and Retries:** Ensures reliable message delivery.
+- **Encryption:** Supports Server-Side Encryption (SSE) for message security.
+- **Cross-Account Access:** Topics can be shared via topic policies.
+
+## 12.6. AWS Step Functions
+
+### Overview
+AWS Step Functions address several limitations of Lambda:
+- Lambda functions have a 15-minute maximum execution time.
+- Chaining Lambda functions can become complex at scale.
+- Lambda is stateless; data must be transferred between invocations to maintain state.
+
+Step Functions enable the creation of state machines.\
+**State machines** are workflows consisting of a start point, an endpoint, and intermediate states. These states can process, modify, and output data, maintaining the flow across the workflow.\
+The maximum execution duration for a state machine is 1 year.
+
+### Workflow Types
+1. **Standard**: Default option with a 1-year execution limit.
+2. **Express**: Designed for high-throughput applications like IoT, with a 5-minute execution limit and improved processing guarantees.
+
+### Integration and Permissions
+- Can be initiated via API Gateway, IoT Rules, EventBridge, or Lambda.
+- State machines interact with AWS services using IAM roles for permissions.
+- Templates, defined using **Amazon States Language (ASL)** (JSON-based), can be used to create and export workflows.
+
+### States in a Workflow
+States define the steps in a workflow. Available states include:
+
+- **Succeed and Fail**: Indicates process success or failure.
+- **Wait**: Pauses the workflow for a set duration or until a specific date/time.
+- **Choice**: Directs workflow paths based on input conditions (e.g., stock levels).
+- **Parallel**: Creates parallel branches to execute multiple processes concurrently.
+- **Map**: Iterates over a list, applying actions to each item.
+- **Task**: Executes a single unit of work and integrates with services like Lambda, DynamoDB, ECS, SNS, SQS, Glue, SageMaker, EMR, and others.
+
+## 12.4. API Gateway
+
+### Overview
+API Gateway enables applications to communicate with users, systems, or other applications through managed APIs. It provides AWS-managed endpoints and supports authentication.
+
+### Key Features
+- **Managed Endpoints**: Provides AWS-hosted endpoints for API access.
+- **Authentication**: Verifies identity and access control.
+- **API Creation**: Allows developers to build and present APIs to customers and systems.
+- **Integration Support**: Works as an entry point for serverless architectures and supports integration with legacy systems.
+- Billing based on API calls, data transfer, and optional features like caching.
+- Can connect to services/endpoints in AWS or on-premises.
+- HTTP APIs, REST APIs, WebSocket APIs.
+- Use cases:
+  - Connect legacy on-premises services with modern applications.
+  - Gradual transition from monolithic to serverless architecture using services like Fargate, Aurora, and DynamoDB.
+
+### Authentication
+Multiple forms of authentication are supported:
+- Authenticate w/ **Cognito** and receive token to verify.
+- Lambda-based authorization using bearer token (ID).
+
+### Endpoint Types
+- Edge-Optimized: Incoming requests routed to the nearest CloudFront POP.
+- Regional: Clients in the same region.
+- Private: Only accessible from within VPCs via interface endpoint.
+
+### Stages
+APis are deployed to stages, where each stage has one deployment.
+- For ex. Dev, Test, Staging, and Production.
+- Stages can be enabled for canary deployments where deployments are made to canary not the stage.
+
+### Errors (Remember for Exam)
+- 4xx - Client Error - Invalid request on client side.
+  - 400 - Bad Request.
+  - 404 - Access Denied.
+  - 429 - API Gateway can throttle - exceeded amount.
+- 5xx - Server Error - Valid request, backend issue.
+  - 502 - Bad Gateway Exception - bad output returned by lambda.
+  - 503 - Service Unavailable - backend is down.
+  - 504 - Integration Failure/Timeout - 29s limit.
+
+### Caching
+API Cache
+- Cache is defined per stage within API Gateway.
+- Cache TTL default is 300s (configurable from 0 to 3600s).
+- Can be encrypted.
+- Cache size 500mb to 237GB.
+
+## 12.8. Simple Queue Service (SQS)
+
+### Overview
+SQS is a fully managed, highly available message queuing service designed for asynchronous communication. It supports replication within a region and guarantees message delivery in the order received, with options for standard or FIFO queues.
+
+### Key Features
+- Message Handling:
+  - Messages up to 256KB in size.
+  - **Visibility timeout** is the amount of time a client has to process a message in some way. If not deleted within the timeout, messages reappear in the queue.
+  - **Dead-letter queues** store messages that fail repeated processing attempts.
+  - **Delay Queues** allow delayed processing of messages.
+
+- Queue Types:
+  - **Standard Queue**:
+    - High throughput with guaranteed *at-least-once delivery*.
+    - Multi-lane design without strict order enforcement.
+    - Scalable, as wide as required.
+  - **FIFO Queue**:
+    - Guarantees *exactly-once delivery* and strict message ordering.
+    - Supports 3,000 messages/second with batching or 300 messages/second without.
+    - Must have `.fifo` suffix.
+- **Polling Options**:
+  - **Short Polling**: Immediate request; may return zero messages if the queue is empty.
+  - **Long Polling**: Waits up to 20 seconds for messages, reducing unnecessary requests.
+- **Retention**: Messages can remain in the queue for up to 15 days.
+
+### Security and Billing
+- **Encryption**:
+  - KMS encryption at rest and server-side encryption for in-transit data.
+- **Access Control**:
+  - Managed via identity policies or resource-based queue policies.
+  - Queue policies allow cross-account access.
+- **Billing**:
+  - Based on requests, not messages. Each request can return 0-10 messages (up to 64KB total).
+
+## 12.9. Kinesis
+
+### Overview
+Kinesis Data Streams: Scalable and highly available streaming service designed to handle real-time data ingestion from multiple devices or applications. It enables near-infinite data rates with automatic scaling.
+
+### Key Features
+- **Data Streams**:
+  - The basic unit of Kinesis.
+  - Supports multiple producers sending data into the stream.
+  - Stores data in a 24-hour moving window (extendable to 7 days).
+  - Older data (beyond the retention period) is replaced by new data.
+- **Scaling and Shards**:
+  - Streams start with a single shard and scale as needed.
+  - Each shard supports up to 1MB/s for ingestion and 2MB/s for consumption.
+  - Data records (1MB each) are stored across shards.
+- **Consumers**:
+  - Multiple consumers can process data from the same stream simultaneously.
+  - Allows flexibility in data analysis (e.g., hourly vs. minute-based insights).
+
+### SQS vs Kinesis
+
+| Feature                  | SQS                                          | Kinesis                                       |
+|--------------------------|----------------------------------------------|----------------------------------------------|
+| Use Case                | One producer/consumer                       | High throughput, multiple consumers         |
+| Message Handling         | Async communication, single delivery         | Rolling window, analytics, and monitoring    |
+| Data Retention           | Up to 15 days                               | 24 hours (extendable to 7 days)             |
+| Throughput               | Moderate                                    | Near infinite scaling                       |
+| Best for                | Simpler workflows                           | High-volume, real-time streaming            |
+
+### Kinesis Data Firehose
+Fully managed service to load data for **data lakes, data stores, and analytics services**.
+- Move data from Kinesis Streams to long-term storage solutions like S3 or other services.\
+- Automatic scaling - fully serverless.
+- Facilitates persistent storage and further processing of streamed data.
+- **Near real-time delivery (~60s)**. NOT real-time.
+- Supports data transformation on the fly (lambda).
+- Billing - volume through firehouse.
+- Destinations:
+  - HTTP / Splunk
+  - Redshift
+  - ElasticSearch
+  - S3 Destination Bucker
+
+### Kinesis Data Analytics
+Service that provides real-time processing of data using SQL.
+- Ingests from Kinesis Data Streams or Firehouse.
+- Destinations: Firehouse, AWS Lambda, Kinesis Data Streams.
+- Application code processes input and produces output.
+When and Where:
+- Streaming data needing real-time SQL processing
+- Time-series analytics (ex. elections/esports).
+- Real-time dashboards (ex. leaderboards).
+- Real-time metrics (ex. Security & Response teams).
+
+### Kinesis Video Streams
+Service to ingest live video data from producers.
+- Security Cameras, smartphones, cars, drones, time-serialised audio, thermal, depth, and RADAR data.
+- Consumers can access data frame-by-frame or as needed.
+- Can persist and ecnrypt data.
+- Can't access directly via storage, only via APIs.
+- Integrates with other AWS services (such as Rekognition and Connect).
+
+## 12.10. Amazon Cognito
+Service for Authentication, Authorization, and User Management for web/mobile apps.
+- **User pools**: Sign-in and get a **JSON Web Token (JWT)**.
+  - User directory management and profiles, sign-up and sign-in (web-ui), MFA, etc.
+  - Cannot be used to access AWS resources.
+- **Identity pools**: Temporary AWS Credentials to access AWS resources.
+  - Unauthenticated Identities such as guest users.
+  - Federated Identities - **SWAP** - Google, Facebook, SAML2.0 & User Pools for short term AWS Credentials.
+  - Assume IAM Roles.
+
+## 12.11. Amazon Glue
+Serverless ETL (Extract, Transform, Load) system.
+- Moves and transforms data between source and destination.
+- Crawls data sources and generates AWS Glue Data catalog.
+- Data Sources:
+  - Stores: S3, RDS, JDBC Compatible, & DynamoDB.
+  - Streams: Kinesis Data Streams, and Apache Kafka.
+  - Targets: S3, RDS, JDBC Databases.
+
+**Data Catalog**:
+- Persistent metadata about data sources in region.
+- One catalog per region per account. Avoid data silos.
+- Used by Amazon Athena, Redshift Spectrum, EMR, and AWS Lake Formation.
+- Can configure crawlers for data sources.
+
+## 12.12. Amazon MQ
+Open-source message broker. Used when SNS and SQS can't be used (for ex. migrating orgs with their own messaging services).
+- Based on Managed Apache ActiveMQ.
+- JMS API - protocols such as AMQP, MQTT, OpenWire, and STOMP.
+- Provides both Queues and Topics.
+- Single Instance (Test, Dev, Cheap) or HA Pair (Active/Standby).
+- **VPC Based**- NOT A PUBLIC SERVICE. Private networking required (ex. Direct Connect).
+- No AWS native integration.
+
+## 12.13. Amazon AppFlow
+Fully-managed integration service to exchange data between applications (connectors) using **flows**.
+- Sync data across applications.
+- Aggregate data from different sources.
+- Public Endpoints, but works with PrivateLink (privacy).
+
+Uses cases:
+- Contact records from Salesforce => Redshift.
+- Copy support tickets from Zendesk => S3.
