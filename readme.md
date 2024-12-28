@@ -2093,3 +2093,128 @@ Fully-managed integration service to exchange data between applications (connect
 Uses cases:
 - Contact records from Salesforce => Redshift.
 - Copy support tickets from Zendesk => S3.
+
+# Global Content Delivery (CDN) and Optimization
+
+## 13.1. CloudFront Overview
+- **CloudFront**: A global Content Delivery Network (CDN) providing download caching.
+  - Caches content closer to customers for lower latency and higher throughput.
+  - Supports static and dynamic content.
+  - Fetches and caches uncached content from the origin (e.g., S3 bucket, ALB, or any internet-accessible location).
+- **Key Components**:
+  - **Origin**: The source of the content. S3 Origin or Custom.
+  - **Distribution**: The configuration unit of CloudFront.
+  - **Edge Locations**: Over 200 global locations hosting cached data.
+    - Typically in 3rd-party data centers with storage and minimal compute.
+  - **Regional Edge Cache**: Larger caches supporting multiple edge locations for less frequently accessed data.
+
+### CloudFront Behaviors
+**Behavior**: Configuration within a Distribution. Like a sub-configuration.
+  - A distrbution can have many behaviors which are configured with a **path pattern**.
+  - If requests match that pattern, that behavior is used.
+
+Behavior-specific settings:
+- **Viewer protocol policy**: HTTP or HTTPS.
+- Allowed HTTP methods: GET, HEAD, POST, PUT, PATCH, DELETE, or OPTIONS.
+- **Restrict viewer access**: Using trusted key groups, or trusted signer.
+- Cache key and origin settings: Cache policy, origin request policy, origin response policy.
+
+### TTL
+- More frequent cache HITS = lower origin load.
+- Default TTL (behavior) = 24 hours (validity period).
+- You can set min and max TTL.
+- Origin Headers:
+  - `Cache-Control max-age` (seconds).
+  - `Cache-Control s-maxage` (seconds).
+  - `Expires` (Date and Time).
+  - Can be set by Custom Origin or S3 Origin.
+
+### Cache Invalidation
+Cache Invalidation - performed on a distribution.
+- Applies to all edge locations.
+- Expires objects based on invalidation patterns.
+  - For ex. `/images/*` to invalidate all images.
+- Versioned file names - `/whiskers1_v1.jpg` and `/whiskers1_v2.jpg`.
+
+### Origins
+Origins are where CloudFront goes to fetch content.\
+Origin groups (2 or more Origins) allow you do add resiliency.\
+Categories of Origins:
+- **S3 Buckets/Origins**.
+- AWS Media Package Channel Endpoints.
+- AWS Media Store Container Endpoints.
+- Everything else (Webservers) - **Custom Origins**.
+
+**Origin Access**: Ability to restrict access to S3 Origin so it's only accessible via CloudFront.
+
+## 13.2. AWS Certificate Manager (ACM)
+HTTPS (HyperText Transfer Protocol Secure) uses SSL/TLS to create a secure tunnel over which normal https can be transferred.
+- **ACM**: Simplifies creating, renewing, and deploying HTTPS certificates.
+  - ACM can generate or import Certificates.
+    - If generated, it will auto-renew. If imported, you are responsible for renewal.
+  - Ensures data is encrypted in transit and verifies server authenticity via trusted Certificate Authorities (CAs).
+- **Key Points**:
+  - Only supports AWS managed services (e.g., CloudFront, ALB, API Gateway).
+  - Self-signed certificates are not accepted for CloudFront.
+  - ACM does not support non-managed services like EC2.
+  - ACM is a **Regional service**.
+    - Certs **cannot leave the region** they are generated or imported in.
+    - *To use a cert with an ALB in ap-southeast-2, you need a cert in ACM in ap-southeast-2*.
+  - Global services such as CloudFront operate as though within 'us-east-1'.
+
+## 13.3. CloudFront and SSL
+CloudFront Default Domain Name (CNAME).
+- For ex. `https://d111111abcdef8.cloudfront.net/`.
+- SSL Supported by default - `*.cloudfront.net` cert.
+- Alternate Domain Names (CNAMES) e.g. `cnd.catagram.io`.
+- Verify Ownership (optionally HTTPS) using a matching certificate.
+- Generate or import the cert in ACM in **us-east-1**.
+- Policy: HTTP or HTTPS, **HTTP => HTTPS**, HTTPS Only.
+- **Two SSL Connections**: Viewer => CloudFront, and CloudFront => Origin.
+  - *Both need valid public certificates!* Self-signed NOT supported.
+
+**SNI** (Server Name Extension): TLS extension, allowing host be included.
+- Resulting in many SSL Certs/Hosts using a shared IP.
+- Old browsers don't support SNI, need dedicated IPs. CloudFront charges extra for dedicated IPs.
+
+## 13.4 Origin Access Identity (OAI)
+**OAI**: Grants CloudFront distribution an identity for secure S3 bucket access.
+- Bucket policy can explicitly allow OAI while blocking direct access (implicit deny).
+- **Best Practice**: Use one OAI per CloudFront distribution for better permission management.
+
+## 13.5. CloudFront Private Behaviors
+CloudFront Security Modes:
+- Public (default): Open Access to objects.
+- Private: requests require Signed Cookie or URL.
+
+If you have multiple behaviors, each can be private or public.\
+**Trusted Key Groups** can be used to create signed URLs and signed cookies.
+- Can be managed using CW API.
+
+**Signed URLs**: provide access to **only one object**.
+- Use URLs if client doesn't support cookies.
+**Signed Cookies**: provide access to **group of objects**.
+- Use for groups of files / all files of a type (e.g., images).
+
+## 13.6. Lambda@Edge
+Allows lightweight Lambda functions to run at CloudFront edge locations.
+- **Languages**: Node.js and Python only.
+- **Limitations**: No VPC, no layers, different execution limits compared to standard Lambda.
+- **Use Cases**: 
+  - A/B testing (Viewer Request).
+  - Migration between S3 origins (Origin Request).
+  - Device-specific content (Origin Request).
+  - Country-specific content (Origin Request).
+
+## 13.7. AWS Global Accelerator
+- Optimizes data flow between users and AWS infrastructure by reducing internet hops.
+  - **How It Works**:
+    - Uses two anycast IP addresses to route traffic to the closest edge location.
+    - Data travels across AWS’s global backbone network for improved performance.
+  - **Key Difference**:
+    - CloudFront caches HTTP/S content.
+    - Global Accelerator optimizes TCP/UDP traffic without caching.
+- **Exam Tip**: Questions about caching likely refer to CloudFront, while global performance optimization for TCP/UDP traffic points to Global Accelerator.
+
+
+
