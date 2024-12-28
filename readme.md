@@ -2411,7 +2411,7 @@ Route-based VPNs
 - Business Premises => DX Location => AWS Region.
 - **Port Allocation** at a DX Location (connection to DX Location must be set up third-party).
 - Provides consistent, low-latency, high-speed connections.
-- No built-in encryption; IPSec VPN can be used over DX for security.
+- No built-in encryption; IPSec Public VPN can be used over DX for security.
 
 ### Components
 - **DX Location** (large data center not owned by AWS)
@@ -2553,5 +2553,12 @@ Provides managed 'servers' which support protocols.
 - Secure Shell File Transfer Protocol (SFTP) - Secure file transfer over SSH.
 - Applicability Statement 2 (AS2) - Structured B2B Data.
 
-Identities - Service Managed, Directory Service, Custom (Lambda/APIGW).
+Identities - Service Managed, Directory Service, Custom (Lambda/APIGW).\
 Managed File Transfer Workflows (MFTW) - serverless file workflow engine.
+
+Multi-AZ Resilient and Scalable.\
+Provisioned Server per hour $ + data transferred $.\
+**Use Cases**: \
+- If you need to access S3/EFS, but with existing protocols
+- Integrating with existing workflows.
+- Using MFTW to create new ones.
