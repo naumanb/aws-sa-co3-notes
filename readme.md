@@ -2216,5 +2216,102 @@ Allows lightweight Lambda functions to run at CloudFront edge locations.
     - Global Accelerator optimizes TCP/UDP traffic without caching.
 - **Exam Tip**: Questions about caching likely refer to CloudFront, while global performance optimization for TCP/UDP traffic points to Global Accelerator.
 
+# Advanced VPC
 
+## 14.1. VPC Flow Logs
+- **Purpose**: Captures metadata (not contents) of network packets within VPC.
+  - Metadata includes:
+    - Source and destination IP addresses
+    - Packet size
+  - Excludes:
+    - To and from Instance metadata (e.g., `http://169.254.169.254/latest/metadata`)
+    - Amazon DNS Server
+    - AWS time synchronization server
+- **Usage Levels**:
+  - VPC-wide - all ENIs in that VPC.
+  - Specific subnets - ENIs within those subnets.
+  - Individual interfaces - ENIs directly.
+- **Characteristics**:
+  - Not real-time.
+  - Destination: S3 or CloudWatch Logs.
+  - Inherited downwards within VPC hierarchy.
+  - Useful for RDS monitoring.
+- **Protocol Numbers**:
+  - ICMP:                    
+  - TCP: 6
+  - UDP: 17
+
+Example Flow Log:
+```
+<version>
+<account>
+<interface-id>
+<srcaddr>
+<dstaddr>
+<srcport>
+<dstport>
+<protocol>
+<packets>
+<bytes>
+<start>
+<end>
+<action>
+<log-status>
+```
+
+## 14.2. Egress-Only Internet Gateway
+- **Function**: Provides outbound-only internet access for IPv6 addresses, similar to NAT for IPv4.
+  - IPv6 addresses are publicly routable, unlike private IPv4.
+- **Configuration**:
+  - Add default IPv6 route `::/0` to the route table, targeting the egress-only gateway ID.
+- Prevents externally initiated inbound connections.
+- Allows internally initiated outbound connections and their responses.
+
+## 14.3. VPC Gateway Endpoints
+- **Purpose**: Provides private access to **S3** and **DynamoDB** without requiring public IPs or NAT gateways.
+- **How It Works**:
+  - Adds prefix list to route table for subnets, directing traffic to the gateway endpoint.
+  - Highly available by default across all AZs in a region.
+  - Limited to resources within the same VPC, but across any subnets.
+- **Key Points**:
+  - **Endpoint policies** control access to S3/DynamoDB.
+  - Region-specific; does not support cross-region access.
+  - Prevents public S3 access by allowing access only via the gateway endpoint.
+  - Limitation: Not accessible from outside the VPC!
+
+## 14.4. VPC Interface Endpoints
+- **Purpose**: Provides private access to **AWS services** other than S3 and DynamoDB (e.g., SNS, SQS).
+- Compared to Gateway Endpoints, Interface Endpoints are not HA - added to **specific subnets**.
+- **Key Features**:
+  - Uses **PrivateLink** to integrate AWS or third-party services into the VPC.
+  - Creates new DNS endpoint (e.g., `vpce-123-xyz.sns.us-east-1.vpce.amazonaws.com`).
+  - Supports **PrivateDNS**:
+    - Replaces default service DNS with private endpoint DNS for seamless integration.
+  - Must configure one endpoint per AZ for high availability.
+- **Network and Security**:
+  - Access controlled via security groups and endpoint policies.
+  - Only supports TCP and IPv4.
+
+## 14.5. Gateway vs. Interface Endpoints
+| **Gateway Endpoints**                  | **Interface Endpoints**                 |
+|---------------------------------------|-----------------------------------------|
+| Use prefix lists and route tables.    | Use DNS and private IP addresses.       |
+| Supports S3 and DynamoDB only.        | Supports all other AWS public services. |
+| Highly available by default.          | Requires configuration for high availability. |
+| No application changes needed.        | May require DNS configuration.          |
+
+## 14.6. Peering
+- **Purpose**: Creates private, encrypted connections between **two VPCs** (within or across regions/accounts).
+- **Key Features**:
+  - Enables private IP communication.
+  - Supports DNS resolution for public hostnames to private IPs within the peer.
+  - Security group referencing:
+    - Same region: Use security group IDs.
+    - Cross-region: Use IP addresses/ranges.
+- **Limitations**:
+  - Non-transitive: Each VPC pair needs a direct peering connection.
+  - CIDRs must not overlap.
+- **Best Practices**:
+  - Design connections carefully to avoid redundant links.
+  - Use appropriate security group rules for region-specific peers.
 
