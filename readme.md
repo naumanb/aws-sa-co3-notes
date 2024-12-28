@@ -1,5 +1,5 @@
 <h1 align="center"> SAA-C03 Notes (Dec 2024) </h1>
-<div align="center"> I've put together these notes for the AWS Solutions Architect - Associate (SAA-C03) Exam using the course by Adrian Cantril because I couldn’t find any GitHub resources that fit what I was looking for. Most were either outdated, too detailed, or too brief. These notes provide a good balance, summarizing key points in a concise, easy-to-understand format that's perfect for quick review later.</div>
+<div align="center"> I've put together these notes for the AWS Solutions Architect - Associate (SAA-C03) Exam using the course by Adrian Cantril because I couldn’t find any GitHub resources that fit what I was looking for. These notes provide a good balance, summarizing key points in a concise, easy-to-understand format that's perfect for quick review later.</div>
 
 ## Contribute
 
