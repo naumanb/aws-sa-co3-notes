@@ -53,7 +53,7 @@ Contributions to the notes are welcome! If you find any errors or have updated n
   - Region-specific; includes permissions, boot volume, and device mappings.
 
 ## 1.5 S3 Basics
-- **Global Object Storage**: Resilient, accessible globally, region-specific data.
+> **Global Object Storage**: Resilient, accessible globally, region-specific data.
 - **Objects**:
   - Key (name), Value (data), Metadata, Access Control.
   - File size: 0 bytes to 5 TB.
@@ -125,7 +125,7 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 - Limitations: Cannot reference groups in resource policies.
 
 ## 2.4 IAM Roles
-- Provide temporary credentials for specific tasks.
+> Provide temporary credentials for specific tasks.
   - Example: Granting developers temporary S3 access via an assumed role.
 - **Trust Policy**: Who can assume the role.
 - **Permission Policy**: Defines role actions.
@@ -167,7 +167,7 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 
 ## 2.7. AWS Organizations
 ### Overview
-AWS Organizations centralize account management for multi-account environments. Without it, each account requires individual IAM users and payment methods. Useful for organizations managing 5+ accounts.
+> AWS Organizations centralize account management for multi-account environments. Without it, each account requires individual IAM users and payment methods. Useful for organizations managing 5+ accounts.
 
 ### Key Features:
 - **Management/Master Account**: Primary account that creates and manages the organization.
@@ -183,7 +183,7 @@ AWS Organizations centralize account management for multi-account environments. 
 ## 2.8. Service Control Policies (SCPs)
 
 ### Overview
-SCPs restrict actions that member accounts can perform. They act as a "guardrail," not granting permissions but limiting what IAM policies can allow. Master accounts cannot be restricted by SCPs (security risk).
+> SCPs restrict actions that member accounts can perform. They act as a "guardrail," not granting permissions but limiting what IAM policies can allow. Master accounts cannot be restricted by SCPs (security risk).
 
 - **Only Overlaps Allowed**: Only allow rules in both the SCP **and** the IAM policy are granted. If a rule is missing in one or the other, the action is denied.
 
@@ -241,7 +241,7 @@ Tracks API activity and user actions for auditing and compliance.
 ## 2.11. AWS Control Tower
 
 ### Overview
-- Quick and easy setup of multi-account environments
+> Quick and easy setup of multi-account environments
 - Orchestrates other AWS services to provide this functionality
 - Organizations, IAM identity center, CloudFormation, Config and more
 - **Landing Zone**: Centralized management for multi-account environments
@@ -291,7 +291,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ## 3.5. Key Management Service (KMS)
 
-- **Purpose**: Manage encryption keys.
+> **Purpose**: Manage encryption keys.
 - Adheres to **FIPS 140-2 (L2)** compliance for AWS-managed keys.
 - **KMS Keys**: Customer-owned keys used for cryptographic operations.
   - Logical - ID, date, policy, description & state.
@@ -376,7 +376,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ## 3.10. S3 Presigned URLs
 
-- **Purpose**: Provide temporary access to S3 objects without sharing credentials.
+> **Purpose**: Provide temporary access to S3 objects without sharing credentials.
 - **Parameters**:
   - Security credentials.
   - Bucket and object key.
@@ -390,7 +390,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ## 3.12. S3 Event Notifications
 
-- Notification generated when events occur in a bucket
+> Notification generated when events occur in a bucket
 - Can be delivered to SQS, SNS, or Lambda.
 - **Event Types**:
   - Object Created
@@ -400,7 +400,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ## 3.13. S3 Object Locks
 
-- Store objects using a write-once-read-many (WORM) model.
+> Store objects using a write-once-read-many (WORM) model.
 - Prevent objects from being deleted or overwritten for a fixed amount of time or indefinitely.
 - Requires versioning
 - Retention period: days & years
@@ -409,7 +409,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ## 3.14. S3 Access Points
 
-- Simplify managing access to S3 buckets/objects.
+> Simplify managing access to S3 buckets/objects.
 - Create multiple access points for different use cases, policies, and network access controls.
 - Created via Console or **aws s3control create-access-point** command.
 
@@ -477,7 +477,7 @@ Tracks API activity and user actions for auditing and compliance.
 ## 4.3. Custom VPC
 
 ### Features
-- **Regionally isolated and resilient**.
+**Regionally isolated and resilient**.
 - No inbound/outbound traffic without explicit configuration.
 - **Hybrid Networking**: Connects on-prem/cloud environments.
 - Tenancy options:
@@ -521,7 +521,7 @@ Tracks API activity and user actions for auditing and compliance.
 ## 4.5. VPC Routing and Internet Gateway (IGW)
 
 ### VPC Router
-- Moves traffic between subnets.
+> Moves traffic between subnets.
 - Route tables define outbound traffic behavior.
   - Each subnet uses the **main route table** unless explicitly associated with a custom table.
 
@@ -646,7 +646,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ## 5.2 EC2 Architecture and Resilience
 
-- Virtual machines (OS + Resources)
+> Virtual machines (OS + Resources)
 - Run on EC2 Hosts
 - Good for:
   - Traditional OS+Application Computer
@@ -714,7 +714,7 @@ Tracks API activity and user actions for auditing and compliance.
 ## 5.5 Elastic Block Store (EBS)
 
 ### Key Features
-- **Block Storage**: Raw disk allocations (volume).
+> **Block Storage**: Raw disk allocations (volume).
 - **AZ Resilient**: provides persistent block storage tied to **one AZ**.
 - Data replication ensures high availability within the AZ.
 - Snapshot (backup) into S3 for region-resilient backups.
@@ -849,7 +849,7 @@ Tracks API activity and user actions for auditing and compliance.
 - Base layers (OS) are often provided by vendors via **container registries** (e.g., Docker Hub).
 
 ### Container Registry
-- **Container Registry**: Repository for storing and sharing container images (e.g., Docker Hub, AWS ECR).
+> **Container Registry**: Repository for storing and sharing container images (e.g., Docker Hub, AWS ECR).
 - Workflow:
   1. Use a **Dockerfile** to create an image.
   2. Upload the image to a registry (private or public).
@@ -864,7 +864,7 @@ Tracks API activity and user actions for auditing and compliance.
 - **Multi-Container Applications**: Supports complex application stacks.
 
 ## 6.2 Elastic Container Service (ECS) Concepts
-- ECS is a **managed container-based compute service** for running containers.
+> ECS is a **managed container-based compute service** for running containers.
 - Operates in two modes:
   1. **EC2 mode**: Leverages EC2 instances for container orchestration.
   2. **Fargate mode**: Serverless, no EC2 management required.
@@ -911,7 +911,7 @@ ECS manages:
 ## 6.4 Elastic Container Registry (ECR)
 
 ### Container Registry
-- **Container Registry**: Repository for storing and sharing container images (e.g., Docker Hub, AWS ECR).
+> **Container Registry**: Repository for storing and sharing container images (e.g., Docker Hub, AWS ECR).
 - Each AWS account has a public and private registry -> Each registry can have many repositories -> Each repository can have many images.
 - Integrated with IAM for permissions
 - Inspector: basic, and enhanced image scanning
@@ -922,7 +922,7 @@ ECS manages:
 ## 6.5 Kubernetes 101
 
 ### Kubernetes
-- **Kubernetes**: Container-orchestration platform for automating the deployment and scaling of containerized applications.
+> **Kubernetes**: Container-orchestration platform for automating the deployment and scaling of containerized applications.
 - Cluster: A deployment of Kubernetes, management, orchestration.
 - Node: Resources; pods are placed on nodes to run.
 - Pods: Smallest units of computing in Kubernetees. Pods are non-permanent.
@@ -947,7 +947,7 @@ ECS manages:
 
 ## 7.1 Bootstrapping EC2 Using User Data
 
-**Bootstrapping**: Automates the configuration of an EC2 instance during launch by running scripts or configuration steps passed as **user data**.
+> **Bootstrapping**: Automates the configuration of an EC2 instance during launch by running scripts or configuration steps passed as **user data**.
 
 - **Process**:
   - User data is injected into the instance via the metadata IP: `http://169.254.169.254/latest/user-data`.
@@ -977,7 +977,7 @@ ECS manages:
 
 ## 7.3 EC2 Instance Roles
 
-**IAM Roles** for EC2 provide temporary, auto-rotated credentials via the metadata service:
+> **IAM Roles** for EC2 provide temporary, auto-rotated credentials via the metadata service:
 
 - Credentials path: `iam/security-credentials/<role-name>`.
 - Best practice: Use IAM roles instead of storing credentials on instances.
@@ -989,7 +989,7 @@ ECS manages:
 
 ## 7.4 SSM Parameter Store
 
-**Parameter Store** securely stores configuration and secrets (e.g., database strings, passwords):
+> **Parameter Store** securely stores configuration and secrets (e.g., database strings, passwords):
 
 - Parameter types: Strings, stringlist, and secure strings.
 - Supports plaintext and encrypted strings (via KMS).
@@ -1062,11 +1062,10 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 - Note: Routing policies listed at the bottom of this section.
 
 ## 8.1. Public Hosted Zones
-
-- A hosted zone is a DNS database for a given section of global DNS data.
-- **Public hosted zones** are hosted on Route 53’s public DNS name servers.
-  - AWS provides at least **4 DNS name servers** for each hosted zone.
-  - Globally resilient service due to multiple DNS servers.
+A hosted zone is a DNS database for a given section of global DNS data.
+> **Public hosted zones** are hosted on Route 53’s public DNS name servers.
+- AWS provides at least **4 DNS name servers** for each hosted zone.
+- Globally resilient service due to multiple DNS servers.
 
 ### Features
 - Automatically created when you register a domain with Route 53.
@@ -1180,7 +1179,7 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 
 ## 8.7. DNSSEC with Route53
 
-- DNSSEC: Strengthens authentication in DNS using digital signatures based on public key cryptography.
+> DNSSEC: Strengthens authentication in DNS using digital signatures based on public key cryptography.
 - "Adds a layer of security by enabling authenticated answers on top of an otherwise insecure protocol. Whereas HTTPS encrypts traffic so nobody on the wire can snoop on your Internet activities, DNSSEC merely signs responses so that forgeries are detectable." - Cloudflare
 
 # Relational Database Service (RDS)
@@ -1269,11 +1268,11 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 
 ## 9.3. Relational Database Service (RDS)
 
-- Managed **Database-Server-as-a-Service (DBSaaS)** for engines like MySQL, PostgreSQL, Oracle, and SQL Server.
-  - Multiple databases on one DB server (instance).
-  - Dedicated storage per instance provided by EBS.
-  - Can use read-replicas to different regions for HA.
-  - Backups & Snapshots can be made to S3.
+> Managed **Database-Server-as-a-Service (DBSaaS)** for engines like MySQL, PostgreSQL, Oracle, and SQL Server.
+- Multiple databases on one DB server (instance).
+- Dedicated storage per instance provided by EBS.
+- Can use read-replicas to different regions for HA.
+- Backups & Snapshots can be made to S3.
 - Costs based on instance size/type, multi-az, storage type, data transferred, backups, and licensing.
 - Instance types:
   - **General** (e.g., `db.m5`), **Memory-optimized** (e.g., `db.r5`), and **Burst** (e.g., `db.t3`).
@@ -1316,8 +1315,8 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 
 ## 9.6. RDS Read-Replicas
 
-- Uses **asynchronous replication** for scaling reads and global resilience.
-  - Data written to primary first, then to replicas.
+>Uses **asynchronous replication** for scaling reads and global resilience.
+- Data written to primary first, then to replicas.
 - Compared to Multi-AZ Cluster, Read-Replicas aren't part of main database instance.
   - Have their own endpoints.
 - Up to 5 replicas per database instance.
@@ -1351,11 +1350,11 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 
 *Very different from RDS*
 
-- High-performance relational database with:
-  - 1 **Primary** and up to **15 Replica** DB instances.
-  - **Cluster architecture**: Shared SSD-based storage (up to 64 TiB) and 6 replica storage nodes.
-  - Automatic replication across multiple AZs.
-  - Faster provisioning and improved availability.
+> High-performance relational database with:
+- 1 **Primary** and up to **15 Replica** DB instances.
+- **Cluster architecture**: Shared SSD-based storage (up to 64 TiB) and 6 replica storage nodes.
+- Automatic replication across multiple AZs.
+- Faster provisioning and improved availability.
 - Separate storage layer for data.
 - Only primary instance can write to storage.
 
@@ -1385,7 +1384,7 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 
 ## 9.11. Aurora Global Database
 
-- Replicates data across up to 5 secondary regions with 16 replicas each.
+> Replicates data across up to 5 secondary regions with 16 replicas each.
 - Storage-level replication ensures low latency (~1 second).
 - Enhances disaster recovery and global read scaling.
 
@@ -1396,7 +1395,7 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 
 ## 9.13. RDS Proxy
 
-- Fully managed, highly available database proxy for RDS.
+> Fully managed, highly available database proxy for RDS.
 - Instead of applications connecting directly to DB, they connect to the proxy.
   - **Application(s) => Proxy (connection pooling) => Database**.
   - Much quicker to establish vs direct DB connection.
@@ -1409,7 +1408,7 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 
 ## 9.14. Database Migration Service (DMS)
 
-- Managed service for migrating databases.
+> AWS managed service for migrating databases.
 - Replication instance performs migration b.w. Source and Destination endpoints
   - One endpoint MUST be on AWS.
 - Supports **Full-load** (one-off migration of all data), **Full-load + Change Data Capture (CDC)**, and **CDC-only** migrations.
@@ -1422,8 +1421,8 @@ Dedicated Hosts allocate physical servers exclusively to your account:
 
 ## 10.1. Elastic File System (EFS) Architecture
 
-AWS managed implementation of **Network File System (NFS)** which allows for the creation of shared 'filesystems' which can be mounted within multi-EC2 instances.
-- EFS enables instances to operate closer to a stateless architecture by providing shared file storage.
+> AWS managed implementation of **Network File System (NFS)** which allows for the creation of shared 'filesystems' which can be mounted within multi-EC2 instances.
+> -EFS enables instances to operate closer to a stateless architecture by providing shared file storage.
 
 - **Protocol**: Implements **NFSv4**.
 - **File System**: Created and mounted on Linux systems.
@@ -1478,22 +1477,22 @@ AWS managed implementation of **Network File System (NFS)** which allows for the
 
 ## 11.1. Regional & Global AWS Architecture
 
-- Global Architecture: Service location & discovery, content delivery (CDN), health checks & failover.
-  - CDNs (such as CloudFront) cache content gobally to improve performance.
+Global Architecture: Service location & discovery, content delivery (CDN), health checks & failover.
+- CDNs (such as CloudFront) cache content gobally to improve performance.
 
-- Regional Architecture: Entry points, scaling & resilience, application services and components.
-  - At this level, environments will have various tiers for applications:
-    - **Web Tier**: Entry point for regional-based applications.
-      - Application Load Balancer (ALB), API Gateway, etc.
-    - **Compute Tier**: Compute services fetches through Web Tier.
-      - EC2, Lambda, Containers (ECS).
-    - **Storage Tier**: Storage services used by Compute.
-      - EBS, EFS, S3.
-    - **Data Tier**: Data services used by various tiers.
-      - RDS, DynamoDB, Aurora.
-      - Typically accessed via **Caching layer** (ElastiCache, DynamoDB Accelerator).
-    - **App Services Tier**: Other services that provide functionality for apps.
-      - Kinesis, Step Functions, SQS, SNS, etc.
+Regional Architecture: Entry points, scaling & resilience, application services and components.
+- At this level, environments will have various tiers for applications:
+  - **Web Tier**: Entry point for regional-based applications.
+    - Application Load Balancer (ALB), API Gateway, etc.
+  - **Compute Tier**: Compute services fetches through Web Tier.
+    - EC2, Lambda, Containers (ECS).
+  - **Storage Tier**: Storage services used by Compute.
+    - EBS, EFS, S3.
+  - **Data Tier**: Data services used by various tiers.
+    - RDS, DynamoDB, Aurora.
+    - Typically accessed via **Caching layer** (ElastiCache, DynamoDB Accelerator).
+  - **App Services Tier**: Other services that provide functionality for apps.
+    - Kinesis, Step Functions, SQS, SNS, etc.
 
 ## 11.2. Evolution of Elastic Load Balancer (ELB)
 
@@ -1514,7 +1513,7 @@ V2 balancers are faster, cheaper, support target groups, and rules.
 
 ## 11.3. Elastic Load Balancer Architecture
 
-Load balancers: Accept connections & requests from users and distribute them to backend services.
+> Load balancers: Accept connections & requests from users and distribute them to backend services.
 - Choose **IPv4** or **Dual stack (IPv4 and IPv6)**.
 - Select **1 subnet** in 2 or more AZs to place Load Balancer (ELB) Nodes.
   - 1 Node in each AZ.
@@ -1552,7 +1551,7 @@ V2 load balancers support rules and **target groups**.
 
 ### Application Load Balancer (ALB)
 
-ALB operates at Layer 7 (Application Layer) of the OSI model. 
+**ALB** operates at Layer 7 (Application Layer) of the OSI model. 
 - It can only inspect HTTP/HTTPS traffic and make routing decisions based on paths, headers, or hosts.
 - L7 content type, cookies, custom headers, user location, and app behaviour.
 - ALBs must have SSL certs if HTTPS is used.
@@ -1569,7 +1568,7 @@ ALB Rules:
 
 ### Network Load Balancer (NLB)
 
-NLB operates at Layer 4 (Transport Layer) of the OSI model.
+**NLB** operates at Layer 4 (Transport Layer) of the OSI model.
 - TCP, TLS, UDP, TCPs_UDP.
 - No visibility or understanding of HTTP/HTTPS.
 - No headers, no cookies, no session stickiness.
@@ -1597,7 +1596,7 @@ Define instance configurations in advance:
 
 ## 11.6. Autoscaling Groups (ASG)
 
-Enable automatic scaling and self-healing for EC2 instances. ASGs use LCs or LTs to provision instances and maintain a specified capacity.
+> Enable automatic scaling and self-healing for EC2 instances. ASGs use LCs or LTs to provision instances and maintain a specified capacity.
 - Have a **Minimum, Desired, and Maximum** size. For ex. 1:2:4 means 1 min, 2 desired, 4 max.
 - ASG keeps running instances to the desired capacity by provisioning or terminating instances.
 - *FREE*. Only billed for created resources.
@@ -1636,7 +1635,7 @@ Defined rules which can adjust values for ASGs:
 - Standby - for instances to standby.
 
 ### ASG Lifecycle Hooks
-Enable you to perform custom actions by pausing instances as an ASG launches or terminates them.
+> Enable you to perform custom actions by pausing instances as an ASG launches or terminates them.
 - Instances are paused within the flow until:
   - A timeout (1 hour by default).
   - CompleteLifecycleAction command.
@@ -1663,7 +1662,7 @@ Ensures requests from the same client are routed to the same server.
 
 ## 11.8. Gateway Load Balancer (GWLB)
 
-Help you run and scale 3rd party appliances.
+> Help you run and scale 3rd party appliances.
 - Deploy, scale, and manage firewalls, intrusion detection and prevention systems, and deep packet inspection systems
 - Transparent inspection and protection of Inbound and Outbound traffic.
 - GWLB endpoints: traffic enters/leaves via these endpoints.
@@ -1705,10 +1704,10 @@ Help you run and scale 3rd party appliances.
 
 ## 12.2. AWS Lambda
 
-Function-as-a-Service (FaaS) that executes code in response to events - short running and focused.
-- Lambda function - a piece of code lambda runs.
-- Runs in runtime environments (eg. Python 3.8) with billing based on execution duration.
-- A key part of Serverless architecture.
+> Function-as-a-Service (FaaS) that executes code in response to events - short running and focused.
+> - Lambda function - a piece of code lambda runs.
+> - Runs in runtime environments (eg. Python 3.8) with billing based on execution duration.
+> - A key part of Serverless architecture.
 
 ### Lambda Architecture
 Lambda function = Unit of configuration. Package of Code + Configurations.\
@@ -1793,7 +1792,7 @@ Execution context is the environment that Lambda runs in.
 Provisioned concurrency can be used to keep contexts warm.
 
 ## 12.3. CloudWatch Events and EventBridge
-CloudWatch Events: Near real-time stream of system events (changes in AWS Services).
+> CloudWatch Events: Near real-time stream of system events (changes in AWS Services).
 
 **EventBridge**: basically CW Events v2.
 - Replacing CW Events + handle third-party event handling and additional features.
@@ -1906,7 +1905,6 @@ The maximum execution duration for a state machine is 1 year.
 
 ### States in a Workflow
 States define the steps in a workflow. Available states include:
-
 - **Succeed and Fail**: Indicates process success or failure.
 - **Wait**: Pauses the workflow for a set duration or until a specific date/time.
 - **Choice**: Directs workflow paths based on input conditions (e.g., stock levels).
@@ -1946,11 +1944,11 @@ APis are deployed to stages, where each stage has one deployment.
 - Stages can be enabled for canary deployments where deployments are made to canary not the stage.
 
 ### Errors (Remember for Exam)
-- 4xx - Client Error - Invalid request on client side.
+- **4xx - Client Error** - Invalid request on client side.
   - 400 - Bad Request.
   - 404 - Access Denied.
   - 429 - API Gateway can throttle - exceeded amount.
-- 5xx - Server Error - Valid request, backend issue.
+- **5xx - Server Error** - Valid request, backend issue.
   - 502 - Bad Gateway Exception - bad output returned by lambda.
   - 503 - Service Unavailable - backend is down.
   - 504 - Integration Failure/Timeout - 29s limit.
@@ -2558,7 +2556,7 @@ Managed File Transfer Workflows (MFTW) - serverless file workflow engine.
 
 Multi-AZ Resilient and Scalable.\
 Provisioned Server per hour $ + data transferred $.\
-**Use Cases**: \
+**Use Cases**:
 - If you need to access S3/EFS, but with existing protocols
 - Integrating with existing workflows.
 - Using MFTW to create new ones.
