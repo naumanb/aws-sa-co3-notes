@@ -3189,6 +3189,7 @@ If you need to read 10 ITEMS per second w/ 2.5KB average size per ITEM.
 - Less admin overhead than using a generic cache.
 
 #### Exam Considerations
+- Runs within a VPC.
 - Primary NODE (Writes) and Replicas (Read).
 - Nodes are HA - if one node fails, the other nodes take over.
 - In-memory cache for scaling - much faster reads, reduced costs.
@@ -3201,3 +3202,66 @@ If you need to read 10 ITEMS per second w/ 2.5KB average size per ITEM.
 - After an item reaches TTL, it is automatically deleted without consuming any write throughput.
 - Provided at no extra cost.
 - Streams of TTL deletion can be enabled (24hr rolling window).
+
+## 18.2. Amazon Athena
+
+> Serverless interactive querying service which allows for ad-hoc questions where billing is based on the amount of data consumed.
+- Handles unstructured, semi-structured, and structured data.
+- Uses Schema-on-read - table-like translation.
+  - Translates data => relational-like when read.
+- `!` Original data never changed - remains on S3 `!`.
+- Output can be sent to other services.
+
+### Exam Considerations
+- No infrastructure - no setup required.
+- Good for queries where loading/transformation isn't desired.
+- Occasional / Ad-hoc queries on data in S3.
+- Serverless querying scenarios - cost conscious.
+- Querying AWS logs - VPC Flow logs, CloudTrail, ELB logs, cost reports, etc.
+- AWS Glue Data Catalog & Web Server Logs.
+- w/ Athena Federated Query for other data sources.
+
+## 18.3. ElastiCache
+
+> Managed in-memory database which provides a managed implementation of Redis or memcached engines.
+- Can be used for caching data - for *READ HEAVY workloads* with low latency requirements.
+- Not persistent - used for temporary data.
+- Two engines as a service:
+  - Redis
+  - Memcached
+- Reduces database workloads, that can otherwise be expensive.
+- Can be used to store Session Data (stateless servers).
+- `!` Requires application code changes `!`.
+
+| **Feature/Aspect**           | **Memcached**                                   | **Redis**                                                  |
+|-------------------------------|-----------------------------------------------|----------------------------------------------------------|
+| **Data Structures**           | Simple data structures.                       | Advanced structures (e.g., strings, lists, sets, hashes). |
+| **Replication**               | No replication.                               | Multi-AZ replication for high availability.              |
+| **Scaling**                   | Multiple nodes (sharding) for scaling.        | Replication to scale reads.                              |
+| **Backups**                   | No backups.                                   | Supports backup and restore.                             |
+| **Concurrency/Transactions**  | Multi-threaded.                               | Supports transactions.                                   |
+
+## 18.4. Redshift
+
+> Column based, petabyte scale, data warehousing product within AWS.
+- Designed for data warehousing and analytics, not for operational usage.
+- **OLAP** (Column based) not OLTP (row/transaction).
+- Pay as you use - similar to RDS.
+- Direct Query S3 using **Redshift Spectrum**.
+- Direct Query other DBs using **federated queries**.
+- Integrates with AWS tooling such as Quicksight.
+- SQL-like interface JDBC/ODBC connections.
+
+### Exam Considerations
+- Server-based provisioned product - NOT SERVERLESS.
+- `!`One AZ in a VPC `!`.
+- Leader Node - Query input, planning, and aggregation.
+- Compute Node - performing queries of data.
+- VPC Security, IAM Permissions, KMS ar rest Encryption, CW Monitoring.
+- Redshift **Enhanced VPC Routing** - VPC Networking.
+  - Enable to use w/ Security groups, NACLs, custom DNS, etc.
+
+### DR and Resilience
+- Use S3 for backups - can be copied across AZs.
+- Automatic incremental backups every 8 hours or 5GB of data w/ 1 day retention (default)/
+- Manual snapshots can be taken at any time.
