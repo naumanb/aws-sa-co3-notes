@@ -3025,3 +3025,177 @@ UserData:
 **Custom Resources**: Logical resource that lets CFN integrate with anything it doesn't natively support.
 - For ex. Populate S3 bucket when you create it, or Delete objects from a bucket when it is being deleted.
 - Passes data to something, and gets data back from something (for ex. Lambda function).
+
+# NoSQL Databases
+
+## 18.1. DynamoDB
+> DynamoDB is a fully managed NoSQL Public Database-as-a-Service using Key/Value pairs or Documents.
+- Wide column key/value database.
+- No self-managed servers or infrastructure.
+- Scaling: Automatic, Manual, or On-Demand provisioning.
+- Highly Resilient - across AZs and optionally global.
+- Really fast - single digit millisecond latency.
+- Provides backups, point-in-time recovery, and encryption at rest.
+- Event-driven integration - do things when data changes.
+
+### Tables
+Base entity inside DynamoDB.\
+DynamoDB is essentially a Database-Table-as-a-Service.
+
+Table is a grouping of *ITEMS* with the same *PRIMARY KEY*.
+- **Items**: how you manage data within a table (i.e. a row).
+- Primary key: 
+  - **Simple (Partition) Primary Key - PK**.
+  - **Composite (Partition & Sort) Primary Key - SK**.
+- Each item MUST have a unique value for PK and SK together. (ex. PK = Week #, SK = Day of week)
+- **Attributes**: data aside from the PK and SK.
+  - Each item can have none, all, mixture, or different attributes.
+
+Capacity (speed) is set on a table.
+- Writes -> **1 WCU = 1KB/sec**
+- Reads -> **1 RCU = 4KB/sec**
+
+### Backups
+
+**On-demand Backups**
+- Full copy of table retained until removed.
+- Used to:
+  - Restore data or configuration in same or cross region.
+  - Restore a table with or without indexes.
+  - Adjust encryption settings.
+
+**Point-in-time recovery**
+- Continuous record of changes allows you to replay to any point in time.
+- Over a 35 day recover window with 1s of granularity.
+- Not enabled by default.
+
+#### Exam Considerations
+- NoSQL => preference DynamoDB
+- Relational Data => NOT DynamoDB
+- Key/Value => DynamoDB
+- Access via console, CLI, or API. NO ACCESS TO SQL.
+- Billed based on RCU, WCU, Storage, and features.
+
+### Reading and Writing
+- **On-Demand** - unknown, unpredictable, low admin.
+  - Price per million Read or Write units.
+- **Provisioned** - RCU and WCU set on a per table basis.
+  - Every operation consumes at least 1 RCU/WCU.
+  - Every table has a RCU and WCU burst pool (300s).
+
+**Query**: look for 1 particular value of the partition key 
+- accepts a single PK value (and SK if applicable) or range.
+- can retrieve all values or filter based on sort key.
+- only charged for the response.
+
+**Scan**: retrieve all items in a table.
+- least efficient but the most flexible operation within DynamoDB.
+- moves through the table consuming capacity of *every* item.
+- any attributes can be used along with any filters. 
+
+### Consistency
+**Consistency**: process of updating data when new data is written to database.
+- Is data being read eventually the latest? or immediately the latest?
+
+Two modes:
+- **Eventually Consistent** - 50% of the cost of strongly consistent.
+- **Strongly (immediately) Consistent**.
+
+In DynamoDB, every piece of data is replicated multiple times in separate AZs in storage nodes.\
+- Changes are made to 'leader' node which is elected from the three storage nodes.
+- Leader node is responsible for updating all replicas (usually within milliseconds).
+- With Eventual Consistent reads, data might be missing for a replica storage node for a short period of time.
+
+### Calculations
+
+If you need to store 10 ITEMS per second w/ 2.5KB average size per ITEM.
+- Calculate WCU per item:
+  1) ROUND UP (ITEM SIZE / 1 KB) = (2.5 / 1) = 3 WCU per item
+  2) Multiple by avg # of items per second = 3 * 10 = 30 WCU
+
+If you need to read 10 ITEMS per second w/ 2.5KB average size per ITEM.
+- Calculate RCU per item:
+  1) ROUND UP (ITEM SIZE / 4 KB) = (2.5 / 4) = 1  per item
+  2) Multiple by avg # of items per second = 1 * 10 = 10 RCU for Strongly Consistent.
+  3) Divide by 2 (50%) for Eventual Consistent = 5 RCU
+
+### Indexes
+
+> **Indexes**: Alternative views on table data.
+- A way to improve the efficiency of data retrieval within DynamoDB.
+- Two types:
+  - Local Secondary Index (LSI): Allow you to create a view using a different sort key (SK).
+  - Global Secondary Index (GSI): Allow you to create a view using a different partition AND sort (PK AND SK).
+
+> **Local Secondary Index (LSI)**: allow for an alternate sort key on data.
+- MUST be created with a table.
+- 5 LSI's per base table.
+- SAME partition key (PK) with an alternative sort key (SK).
+- Shares the RCU and WCU with the table.
+- Attributes - ALL, KEYS_ONLY, INCLUDE
+
+> **Global Secondary Index (GSI)**: allow for an alternate partition key AND sort key on data.
+- Can be created at any time - even after the table is created.
+- 20 GSI's per table.
+- Alternative PK and SK.
+- Have their own RCU and WCU allocations.
+- Attributes - ALL, KEYS_ONLY, INCLUDE
+- *ALWAYS Eventually Consistent*.
+
+#### Exam Considerations
+- Careful with projection (KEYS_ONLY, INCLUDE, ALL).
+- Queries on attributes NOT projected can be expensive.
+- Use GSIs as default, LSI only when strong consistency required.
+- Use indexes for alternative access patterns.
+
+### Streams and Triggers
+
+> **Streams**: time ordered list of ITEM CHANGES in a table.
+- 24-hr rolling window with ordered set of changes.
+- Enabled on a per table basis.
+- Records INSERTS, UPDATES, and DELETES.
+- Different view types influence what is in the stream.
+  - **KEYS_ONLY**: only PK and SK.
+  - **NEW_IMAGE**: all attributes after change.
+  - **OLD_IMAGE**: all attributes before change.
+  - **NEW_AND_OLD_IMAGES**: all attributes (pre and post-change).
+
+> **Triggers**: actions take place in the event of a change in data.
+- ITEM changes generate an event.
+- Event contains data which changed.
+- An action is taken using that data.
+- AWS = Streams + Lambda
+- Useful for 
+  - Reporting & analytics (stock prices, sales, etc).
+  - Aggregation, Messaging, or Notifications.
+
+### Global Tables
+
+> **Global Tables**: provide multi-master cross-region replication.
+- Tables are created in multiple regions and added to the same global table.
+- Last writer wins is used for conflict resolution.
+- Reads and Writes can occur to any region.
+- Generally sub-second replication between regions.
+- Strong consistent reads ONLY in the same region as writes.
+
+### DynamoDB Accelerator (DAX)
+
+> **DynamoDB Accelerator (DAX)**: in-memory cache designed specifically for DynamoDB.
+- DAX handles retrieval of data from database and caching.
+  - Application uses a single call to DAX to retrieve data.
+- Less complexity for the app developed - tighter integration.
+- Less admin overhead than using a generic cache.
+
+#### Exam Considerations
+- Primary NODE (Writes) and Replicas (Read).
+- Nodes are HA - if one node fails, the other nodes take over.
+- In-memory cache for scaling - much faster reads, reduced costs.
+- Can scale up or down based on usage.
+- DAX is NOT an AWS Service - deployed WITHIN a VPC.
+
+### TTL (Time To Live)
+
+> TTL allows you to define a per-item timestamp to determine when an item is no longer needed.
+- After an item reaches TTL, it is automatically deleted without consuming any write throughput.
+- Provided at no extra cost.
+- Streams of TTL deletion can be enabled (24hr rolling window).
