@@ -2688,7 +2688,7 @@ Layer 3/4/5 firewalls can't see data (opaque), only IP Addresses, ports, and ses
 
 # Infrastructure as Code (CloudFormation)
 
-## 17.1. CloudFormation
+## 17. CloudFormation
 > **Purpose**: Provision, configure, and monitor AWS resources using templates.
 
 ### Physical and Logical Resources
@@ -2710,7 +2710,7 @@ Resources:
       KeyName: "A4L"
 ```
 
-## 17.2. Template and Pseudo Parameters
+### Template and Pseudo Parameters
 
 **Template Parameters**: accept input - console/CLI/API - when a stack is created or updated (ex. size of instances).
 - Can be referenced within Logical Resources.
@@ -2736,7 +2736,7 @@ Parameters:
 **Pseudo Parameters**: provided by AWS based on the environment when creating the stack.
 - For ex: `$AWS::Region`, `$AWS::AccountId`, `$AWS::StackId`, `$AWS::StackName`.
 
-## 17.3. CloudFormation Intrinsic Functions
+### Intrinsic Functions
 
 **Intrinsic Functions**: allow you to gain access to data at runtime.
 - `**Ref**` & `Fn::GetAtt` - reference logical resources.
@@ -2756,7 +2756,7 @@ Parameters:
   - `Fn::Or` - evaluate multiple conditions.
   - `Fn::Not` - evaluate a condition.
 
-## 17.4. CloudFormation Mappings
+### Mappings
 
 **Mappings**: map keys to values, allowing lookup.
 - Can have one key, or Top & Second level.
@@ -2781,7 +2781,7 @@ Mappings:
 
 `FindInMap [MapName, TopLevelKey, SecondLevelKey]` => `!FindInMap [ "RegionMap", !Ref 'AWS::Region', "HVM64" ]`
 
-## 17.5. CloudFormation Outputs
+### Outputs
 
 **Outputs**: return values from a stack.
 - Optional in templates.
@@ -2797,7 +2797,7 @@ Outputs:
     Value: !Join ['',['https://', !GetAtt Instance.DNSName]]
 ```
 
-## 17.6. CloudFormation Conditions
+### Conditions
 
 **Conditions**: evaluate a condition and return a value.
 - Created in the optional 'Conditions' section of template.
@@ -2835,7 +2835,7 @@ Resources:
       ImageId: !Ref LatestAmiId
 ``` 
 
-## 17.7. CloudFormation DependsOn
+### CloudFormation DependsOn
 
 CloudFormation tries to be efficient by doing things in parallel (create, update, delete).
 - Tries to determine dependency order (VPC => SUBNET => EC2).
@@ -2845,7 +2845,7 @@ CloudFormation tries to be efficient by doing things in parallel (create, update
 
 ![dependson](CloudFormationDependsOn.png)
 
-## 17.8. Wait Conditions & cfn-signal
+### Wait Conditions & cfn-signal
 
 Configure CloudFormation to wait for a condition to be met.
 - Wait for 'X' number of success signals.
@@ -2874,7 +2874,7 @@ WaitCondition:
 ```
 
 
-## 17.9. CloudFormation Nested Stacks
+### Nested Stacks
 
 Stack limitations:
 - Resources within a single stack share the same lifecycle.
@@ -2903,7 +2903,7 @@ Use cases:
 - Make the installation process easier.
 - **! Only use when everything is lifecycle linked !**
 
-## 17.10. CloudFormation Cross-Stack References
+### Cross-Stack References
 
 Outputs from other stacks are not normally visible.\
 However, they can be exported using **Cross-stack references**, making them visible from other stacks.
@@ -2925,7 +2925,7 @@ Use cases:
 - Stacks with different lifecycles.
 - Re-use resources created by a stack.
 
-## 17.11. Nested Stacks vs Cross-Stack References
+### Nested Stacks vs Cross-Stack References
 
 | **Feature/Aspect**         | **Nested Stacks**                                                                 | **Cross-Stack References**                                                                                       |
 |-----------------------------|----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
@@ -2934,11 +2934,11 @@ Use cases:
 | **Management**              | Managed as a part of a parent stack; changes propagate through the hierarchy.    | Managed independently; changes in one stack require updates to dependent stacks to reflect the new references.  |
 | **Modularity**              | Encourages modularity and reuse of templates by breaking complex applications into smaller stacks. | Facilitates sharing specific resources between stacks but doesn’t inherently encourage modular template design.  |
 
-## Key Takeaways
+#### Key Takeaways
 - **Nested Stacks**: Ideal for structuring and managing complex applications with reusable templates, ensuring each stack is self-contained and unique.
 - **Cross-Stack References**: Best suited for scenarios where resource sharing (e.g., VPC or security groups) is essential across multiple independently managed stacks.
 
-## 17.12. StackSets
+### StackSets
 
 **StackSets**: Allow you to deploy CFN stacks across many accounts and regions.
 - Containers in an admin account that contain stack instances (which reference stacks).
@@ -2957,7 +2957,7 @@ Use cases:
 - AWS Config Rules - MFA, EIPS, EBS Encryption
 - Create IAM Roles for cross-account access
 
-## 17.13. Deletion Policy
+### Deletion Policy
 
 If you a delete a logical resource from a temaplte -> the physical resource is deleted by default.
 
@@ -2965,7 +2965,7 @@ If you a delete a logical resource from a temaplte -> the physical resource is d
 - Delete (Default), Retain, or Snapshot (if supported, ex. EBS Volume, RDS, ElastiCache, etc).
 - `!` Only applies to DELETE, not REPLACE `!`
 
-## 17.14. CloudFormation Stack Roles
+### CloudFormation Stack Roles
 
 CFN uses the permissions of the logged in identity by default.
 - You need permissions to create, update, and delete AWS stacks and resources.
@@ -2975,7 +2975,7 @@ CFN uses the permissions of the logged in identity by default.
 - Allows role separation; one team can create stacks, another team can update stacks.
 - The identity creating the stack doesn't need resource permission - only **PassRole**.
 
-## 17.15. CloudFormation Init (cfn-init)
+### CloudFormation Init (cfn-init)
 
 **CloudFormation Init**: Simple configuration management system.
 - Configuration directives stored in template.
@@ -3008,19 +3008,19 @@ UserData:
     /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2Instance --region ${AWS::Region}
 ```
 
-## 17.16. CloudFormation cfn-hup
+### CloudFormation cfn-hup
 
 **cfn-hup**: Helper script to run configurable actions based on changes.
 - Detects changes in resource metadata.
 - Reruns cfn-init when change metadata or update a stack.
 
-## 17.17. CloudFormation ChangeSets
+### CloudFormation ChangeSets
 
 **ChangeSets**: Allow you to preview how proposed changes to a stack might impact running resources.
 - Can create multiple changesets for different versions.
 - Chosen changes can be applied by executing the change set.
 
-## 17.18. CloudFormation Custom Resources
+### CloudFormation Custom Resources
 
 **Custom Resources**: Logical resource that lets CFN integrate with anything it doesn't natively support.
 - For ex. Populate S3 bucket when you create it, or Delete objects from a bucket when it is being deleted.
