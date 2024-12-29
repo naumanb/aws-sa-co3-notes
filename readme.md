@@ -25,6 +25,8 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 16. [Security, Deployment, and Operations](#security-deployment-and-operations)
 17. [Infrastructure as Code (CloudFormation)](#infrastructure-as-code-cloudformation)
 18. [NoSQL Databases](#nosql-databases)
+19. [Machine Learning](#machine-learning-101)
+20. [AWS Local Zones](#aws-local-zones)
 
 # AWS Fundamentals
 
