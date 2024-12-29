@@ -2685,3 +2685,343 @@ Layer 3/4/5 firewalls can't see data (opaque), only IP Addresses, ports, and ses
 - Notify or event-driven protection/remediation.
 - Supports multiple accounts (Master and Member).
 - *Sources*: DNS Logs, VPC Flow Logs, CloudTrail Event Logs, CloudTrail Management Events, CloudTrail S3 Data Events.
+
+# Infrastructure as Code (CloudFormation)
+
+## 17.1. CloudFormation
+> **Purpose**: Provision, configure, and monitor AWS resources using templates.
+
+### Physical and Logical Resources
+CloudFormation Template - YAML or JSON.
+- Contains logical resources - the 'WHAT'.
+- Templates are used to create Stacks (1, 200, 30...).
+- **Stacks**: create physical resources from the logical.
+  - If a stack template is changed - physical resources are changed.
+  - If a stack is deleted, physical resources are deleted. 
+
+Example of a CloudFormation template:
+```
+Resources:
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: "t2.micro"
+      KeyName: "A4L"
+```
+
+## 17.2. Template and Pseudo Parameters
+
+**Template Parameters**: accept input - console/CLI/API - when a stack is created or updated (ex. size of instances).
+- Can be referenced within Logical Resources.
+- Influence physical resources and/or configuration.
+- Can be configured with Defaults, AllowedValues, Min and Max length & AllowedPatterns, NoEcho, & Type.
+
+Example:
+```
+Parameters:
+  InstanceType:
+    Type: String
+    Default: "t2.micro"
+    AllowedValues:
+      - "t2.micro"
+      - "t2.medium"
+      - "t2.large"
+    Description: "Pick an Instance Type."
+    InstanceAmiId:
+      Type: String
+      Description: "Instance AMI ID."
+```
+
+**Pseudo Parameters**: provided by AWS based on the environment when creating the stack.
+- For ex: `$AWS::Region`, `$AWS::AccountId`, `$AWS::StackId`, `$AWS::StackName`.
+
+## 17.3. CloudFormation Intrinsic Functions
+
+**Intrinsic Functions**: allow you to gain access to data at runtime.
+- `**Ref**` & `Fn::GetAtt` - reference logical resources.
+  - Example: `ImageId: !Ref LatestAmiId` -> references a parameter. 
+- `Fn::Join` - concatenate strings. 
+  - Example: `Value: !Join ['', ['http://', !GetAtt Instance.DNSName]]` -> creating a web url.
+- `Fn::Split` - split strings.
+- `Fn::GetAZs` - get a list of availability zones.
+  - Example: `AvailabilityZone: !Select [0, !GetAZs '']` -> selects the first AZ.
+- `Fn::Select` - select a value from a list.
+- `Fn::Base64` - encode/decode strings.
+- `Fn::Sub` - substitute values into strings.
+- `Fn::Cidr` - generate a CIDR block.
+- Conditions:
+  - `Fn::If` - evaluate a condition and return a value.
+  - `Fn::And` - evaluate multiple conditions.
+  - `Fn::Or` - evaluate multiple conditions.
+  - `Fn::Not` - evaluate a condition.
+
+## 17.4. CloudFormation Mappings
+
+**Mappings**: map keys to values, allowing lookup.
+- Can have one key, or Top & Second level.
+- Mappings use the !FindInMap intrinsic function.
+- Common use: retrieve AMI for given region & architecture.
+- Help improve template portability.
+
+Example:
+```
+Mappings:
+  RegionAmiMap:
+    us-east-1:
+      HVM64: "ami-12345678"
+      HVMG2: "ami-87654321"
+    us-west-1:
+      HVM64: "ami-0bdd6d1d"
+      HVMG2: "ami-066ee8d7"
+    eu-west-1:
+      HVM64: "ami-047b4a9b"
+      HVMG2: "ami-31c2f9d2"
+```
+
+`FindInMap [MapName, TopLevelKey, SecondLevelKey]` => `!FindInMap [ "RegionMap", !Ref 'AWS::Region', "HVM64" ]`
+
+## 17.5. CloudFormation Outputs
+
+**Outputs**: return values from a stack.
+- Optional in templates.
+- Values can be declared.
+- Visible as outputs when using CLI and in the console UI.
+- Can be accessible from a parent stack (nesting) and be exported (for cross-stack references).
+
+Example:
+```
+Outputs:
+  WordpressURL:
+    Description: "Instance Web URL"
+    Value: !Join ['',['https://', !GetAtt Instance.DNSName]]
+```
+
+## 17.6. CloudFormation Conditions
+
+**Conditions**: evaluate a condition and return a value.
+- Created in the optional 'Conditions' section of template.
+- Evaluated to be TRUE or FALSE.
+- Processed before resources are created.
+- Use intrinsic functions (AND, EQUALS, IF, NOT, OR).
+- Associated with logical resources to control if they are created or not.
+
+Example Scenario:
+1) User decides on environment type via parameter template.
+```
+Parameters:
+  EnvType:
+    Type: String
+    AllowedValues:
+      - 'dev'
+      - 'prod'
+    Description: "Environment Type."
+    Default: 'dev'
+```
+2) CloudFormation evaluates the condition for True/False state.
+```
+Conditions:
+  IsProd: !Equals 
+    - !Ref EnvType
+    - 'prod'
+```
+3) When processing resources, it will only create the resource if the condition is true.
+```
+Resources:
+  Wordpress:
+    Type: 'AWS::EC2::Instance'
+    Condition: IsProd
+    Properties:
+      ImageId: !Ref LatestAmiId
+``` 
+
+## 17.7. CloudFormation DependsOn
+
+CloudFormation tries to be efficient by doing things in parallel (create, update, delete).
+- Tries to determine dependency order (VPC => SUBNET => EC2).
+
+**DependsOn**: lets you explicitly define dependencies between resources.
+- For ex: Resource B and C depends on Resource A.
+
+![dependson](CloudFormationDependsOn.png)
+
+## 17.8. Wait Conditions & cfn-signal
+
+Configure CloudFormation to wait for a condition to be met.
+- Wait for 'X' number of success signals.
+- Wait for Timeout H:M:S for those signals (12 hours max).
+- If success signals received .. CREATE_COMPLETE.
+- If failure signals received .. CREATE_FAILED.
+- If timeout is reached .. CREATE_FAILED.
+
+Examples:
+1) CreationPolicy - wait for 3 success signals and timeout (15M).
+```
+CreationPolicy:
+  ResourceSignal:
+    Count: 3
+    Timeout: PT12M
+```
+2) WaitCondition
+```
+WaitCondition:
+  Type: AWS::CloudFormation::WaitCondition
+  DependsOn: "someresource"
+  Properties:
+    Handle: !Ref "WaitHandle"
+    Timeout: "300"
+    Count: "1"
+```
+
+
+## 17.9. CloudFormation Nested Stacks
+
+Stack limitations:
+- Resources within a single stack share the same lifecycle.
+- Limit of 500 resources
+- Can't easily resuse resources (ex. VPC).
+- Can't reference other stacks.
+
+**Nested Stacks**: create a stack within another stack.
+- Root Stack & Parent Stack.
+
+Example:
+```
+VPCSTACK:
+  Type: AWS::CloudFormation::Stack
+  Properties:
+    TemplateURL: https://someurl.com/temmplate.yaml
+    Parameters:
+      Param1: !Ref SomeParam1
+      Param2: !Ref SomeParam2
+      Param3: !Ref SomeParam3
+```
+
+Use cases:
+- Overcome the 500 Resource Limit.
+- Modular templates (code reuse) - reuse Templates.
+- Make the installation process easier.
+- **! Only use when everything is lifecycle linked !**
+
+## 17.10. CloudFormation Cross-Stack References
+
+Outputs from other stacks are not normally visible.\
+However, they can be exported using **Cross-stack references**, making them visible from other stacks.
+- Exports must have a unique name in the region.
+- `Fn::ImportValue` can be used instead of `Ref` to import references.
+
+Example:
+```
+Outputs:
+  SHAREDVPCID:
+    Description: "Shared VPC ID"
+    Value: !Ref VPC
+    Export:
+      Name: SHAREDVPCID
+```
+
+Use cases:
+- Service-oriented architectures: when you're providing services from one stack to another.
+- Stacks with different lifecycles.
+- Re-use resources created by a stack.
+
+## 17.11. Nested Stacks vs Cross-Stack References
+
+| **Feature/Aspect**         | **Nested Stacks**                                                                 | **Cross-Stack References**                                                                                       |
+|-----------------------------|----------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|
+| **Purpose**                 | Designed to reuse templates by organizing them hierarchically, where each stack is unique. | Used to reuse resources (e.g., shared VPCs) across multiple stacks by exporting/importing outputs.              |
+| **Resource Sharing**        | Resources within nested stacks are isolated and not shared across stacks.         | Allows sharing of specific resources (e.g., VPC, subnets) between multiple stacks using `Export` and `Fn::ImportValue`. |
+| **Management**              | Managed as a part of a parent stack; changes propagate through the hierarchy.    | Managed independently; changes in one stack require updates to dependent stacks to reflect the new references.  |
+| **Modularity**              | Encourages modularity and reuse of templates by breaking complex applications into smaller stacks. | Facilitates sharing specific resources between stacks but doesn’t inherently encourage modular template design.  |
+
+## Key Takeaways
+- **Nested Stacks**: Ideal for structuring and managing complex applications with reusable templates, ensuring each stack is self-contained and unique.
+- **Cross-Stack References**: Best suited for scenarios where resource sharing (e.g., VPC or security groups) is essential across multiple independently managed stacks.
+
+## 17.12. StackSets
+
+**StackSets**: Allow you to deploy CFN stacks across many accounts and regions.
+- Containers in an admin account that contain stack instances (which reference stacks).
+- Stack instance: containers for individual stacks that run in an indiviudal region in an account.
+- Stack instances & stacks are in 'target accounts'.
+- Each stack = 1 region in 1 account.
+- Security is self-managed or service-managed.
+
+Terms:
+- Concurrent Accounts: defines how many individual accounts can used at the same time.
+- Failure Tolerance: amount of individual deployments that can fail.
+- Retain Stacks: delete stack from accounts by removing stack instances from StackSets.
+
+Use cases:
+- Enable AWS config
+- AWS Config Rules - MFA, EIPS, EBS Encryption
+- Create IAM Roles for cross-account access
+
+## 17.13. Deletion Policy
+
+If you a delete a logical resource from a temaplte -> the physical resource is deleted by default.
+
+**Deletion Policy**: specify what to do with the physical resource when the logical resource is deleted within a stack.
+- Delete (Default), Retain, or Snapshot (if supported, ex. EBS Volume, RDS, ElastiCache, etc).
+- `!` Only applies to DELETE, not REPLACE `!`
+
+## 17.14. CloudFormation Stack Roles
+
+CFN uses the permissions of the logged in identity by default.
+- You need permissions to create, update, and delete AWS stacks and resources.
+- Different teams have different permissions.
+
+**Stack Roles**: allow CFN to assume a role to gain the permissions.
+- Allows role separation; one team can create stacks, another team can update stacks.
+- The identity creating the stack doesn't need resource permission - only **PassRole**.
+
+## 17.15. CloudFormation Init (cfn-init)
+
+**CloudFormation Init**: Simple configuration management system.
+- Configuration directives stored in template.
+- `AWS::CloudFormation::Init` part of logical resource.
+- Run once as part of bootstrapping.
+- User Data vs cfn-init
+  - User Data is Procedural - HOW you want things to be done.
+  - cfn-init is **Desired State** - WHAT you want to be done.
+- Accessed via cfn-init helper script.
+
+Example:
+```
+EC2Instance:
+  Type: AWS::EC2::Instance
+  CreationPolicy: ...
+  Metadata:
+    AWS::CloudFormation::Init:
+      configSets: ...
+      install_cfn: ...
+      software_install: ...
+      configure_instance: ...
+      install_wordpress: ...
+      configure_wordpress: ...
+```
+```
+UserData:
+  Fn::Base64: !Sub |
+    #!/bin/bash
+    /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC2Instance --region ${AWS::Region}
+    /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC2Instance --region ${AWS::Region}
+```
+
+## 17.16. CloudFormation cfn-hup
+
+**cfn-hup**: Helper script to run configurable actions based on changes.
+- Detects changes in resource metadata.
+- Reruns cfn-init when change metadata or update a stack.
+
+## 17.17. CloudFormation ChangeSets
+
+**ChangeSets**: Allow you to preview how proposed changes to a stack might impact running resources.
+- Can create multiple changesets for different versions.
+- Chosen changes can be applied by executing the change set.
+
+## 17.18. CloudFormation Custom Resources
+
+**Custom Resources**: Logical resource that lets CFN integrate with anything it doesn't natively support.
+- For ex. Populate S3 bucket when you create it, or Delete objects from a bucket when it is being deleted.
+- Passes data to something, and gets data back from something (for ex. Lambda function).
