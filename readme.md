@@ -7,14 +7,22 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 
 ## Table of Contents
 
-1. [AWS Fundamentals](#1-aws-fundamentals)
-2. [IAM, Accounts, and AWS Organizations](#2-iam-accounts-and-aws-organizations)
-3. [Security, Identity, and Compliance](#3-simple-storage-service-s3)
-4. [Virtual Private Clouds (VPC)](#4-virtual-private-cloud-vpc)
-5. [Elastic Cloud Compute (EC2)](#5-elastic-cloud-compute-ec2)
-6. [Containers and ECS](#6-containers-and-ecs)
-7. [Advanced EC2](#7-advanced-ec2)
-8. [Route 53](#8-route-53)
+1. [AWS Fundamentals](#aws-fundamentals)
+2. [IAM, Accounts, and AWS Organizations](#iam-accounts-and-aws-organizations)
+3. [Security, Identity, and Compliance](#simple-storage-service-s3)
+4. [Virtual Private Clouds (VPC)](#virtual-private-cloud-vpc)
+5. [Elastic Cloud Compute (EC2)](#elastic-cloud-compute-ec2)
+6. [Containers and ECS](#containers-and-ecs)
+7. [Advanced EC2](#advanced-ec2)
+8. [Route 53](#route-53)
+9. [Relational Database Service (RDS)](#relational-database-service-rds)
+10. [Network Storage & Data Lifecycle](#network-storage-and-data-lifecycle)
+11. [High Availability & Scaling](#high-availability-and-scaling)
+12. [Serverless and Application Services](#serverless-and-application-services)
+13. [Global Content Delivery (CDN) and Optimization](#global-content-delivery-cdn-and-optimization)
+14. [Advanced VPC](#advanced-vpc)
+15. [Hybrid Environments and Migration](#hybrid-environments-and-migration)
+16. [Security, Deployment, and Operations](#security-deployment-and-operations)
 
 # AWS Fundamentals
 
@@ -1417,7 +1425,7 @@ A hosted zone is a DNS database for a given section of global DNS data.
   - Not used between DBs of same type.
   - Use with AWS Snowball for physical migration of extremely large data.
 
-# Network Storage & Data Lifecycle
+# Network Storage and Data Lifecycle
 
 ## 10.1. Elastic File System (EFS) Architecture
 
@@ -1473,7 +1481,7 @@ A hosted zone is a DNS database for a given section of global DNS data.
     - **Vault lock**: write-one, read-many (WORM), 72hr cool-off
   - On-Demand backups with Point-in-time recovery.
 
-# High Availability & Sclaing
+# High Availability and Scaling
 
 ## 11.1. Regional & Global AWS Architecture
 
