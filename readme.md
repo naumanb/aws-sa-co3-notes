@@ -2560,3 +2560,120 @@ Provisioned Server per hour $ + data transferred $.\
 - If you need to access S3/EFS, but with existing protocols
 - Integrating with existing workflows.
 - Using MFTW to create new ones.
+
+# Security, Deployment, and Operations
+
+## 16.1. AWS Secrets Manager
+> **Purpose**: Manages secrets like passwords, API keys, and database credentials.
+Shares functionality with SSM Parameter Store.\
+Designed for secrets (e.g. passwords, API Keys).\
+**Features**:
+- Usable via Console, CLI, API, or SDKs.
+- **Automatic rotation of secrets** using Lambda.
+- Direct integration with RDS and some AWS products.
+- Secrets encrypted at rest via KMS.
+- Controlled access through IAM permissions.
+**Example Workflow**:
+- Secrets Manager SDK retrieves database credentials using IAM.
+- Application accesses the database using these credentials.
+- Periodic Lambda function rotates secrets using execution roles.
+- KMS ensures secure encryption and role separation.
+
+## 16.2. Application Level (L7) Firewall
+Layer 3/4/5 firewalls can't see data (opaque), only IP Addresses, ports, and sessions.
+**Layer 7 Firewalls**
+- Aware of Layer 7 protocols (HTTP/HTTPS). 
+- Identify normal or abnormal requests for protocol-specific attacks.
+- **Data at L7 can be inspected, blocked, replaced, or tagged** (adult, spam, off-topic, etc.).
+- Able to identify, block, and adjust specific applications (i.e. Facebook, Twitter, etc.).
+- Keep L3/4/5 features + can react to L7 elements (DNS, RATE, Content, Headers, etc).
+
+## 16.3 Web Application Firewall (WAF)
+> Layer 7 protection for HTTP/HTTPS traffic.
+- Mitigates complex attacks like:
+  - SQL injection, cross-site scripting, geo blocks, and rate limiting.
+- Integrated with Load Balancers, API Gateway, and CloudFront.
+- **Web Access Control Lists (WEB ACL)**:
+  - Rules within Rule Groups are evaluated for incoming traffic.
+  - Resource Types: CloudFront or Regional Service.
+  - Web ACL Capacity Units (WCU) -  Default 1500.
+  - Deployable to CloudFront edge locations.
+
+### Rule Groups
+- Don't have default actions.
+- Rule Group Type: Managed or Custom.
+- Rule groups can be references by multiple WEBACLs.
+- **Rules**: Type, Statement, or Action.
+  - Type: Regular or Rate-based.
+  - Statement: (WHAT to match) or (COUNT ALL) or (WHAT & COUNT)
+  - Single, AND, OR, NOT.
+  - Action: Allow, Block, or Count, Captcha.
+
+## 16.4. AWS Shield
+> Protects against DDoS attacks.
+- **Shield Standard** (Free):
+  - Default with Route53, CloudFront, and AWS Global Accelerator.
+  - Protects Layer 3 and Layer 4 traffic.
+  - Protects against:
+    - Network Volumetric Attacks (L3) - Saturate Capacity.
+    - Network Protocol Attacks (L4) - TCP SYN Flood.
+- **Shield Advanced** ($3000/month):
+  - Covers EC2, ELB, CloudFront, Global Accelerator, and Route53.
+  - Includes DDoS advanced response team and financial insurance.
+  - WAF Integration w/ Application Layer (L7) protection.
+    - Network Content Attacks (L7) - Web request floods, etc.
+  - Real time visibility of DDOS events and attacks.
+
+## 16.5. CloudHSM
+> **Purpose**: Dedicated single-tenant hardware for key management.
+
+**Hardware Security Module** (HSM) - Hardware-based key storage.
+- AWS provisioned, but *fully customer-managed*.
+- **Comparison to KMS**:
+  - KMS is shared; CloudHSM is single-tenant and fully managed.
+  - CloudHSM supports FIPS 140-2 Level 3 (vs. KMS’s Level 2).
+- **Features**:
+  - No AWS access to keys.
+  - Industry-standard APIs: *PKCS#11, JCE, and CryptoNG libraries*.
+  - KMS can use CloudHSM as a custom key store (integration with KMS).
+  - Requires an endpoint in the VPC for access.
+  - High Availability (HA) needs at least two HSMs in different AZs.
+
+### Use Cases
+- SSL/TLS offloading for web servers.
+- Enabling Transparent Data Encryption (TDE) for Oracle databases.
+- Securing private keys for certificate authorities.
+- Integrating with non-AWS products.
+
+## 16.6. AWS Config
+> **Purpose**: Record configuration changes over time on resources.
+- **Features**:
+  - Enables configuration changes to be recorded in S3 config bucket.
+  - Auditing of changes, compliance with standards.
+  - Does not prevent changes from happening.
+  - *Regional service* but supports cross-region and account aggregation.
+  - Changes can generate SNS notifications and events (EventBridge).
+
+## 16.7. Amazon Macie
+> Data Security and Data Privacy service that uses machine learning and pattern matching to discover and protect your sensitive data in AWS.
+- Discover, monitor, and protect data stored in **S3 buckets**.
+- Automated discovery of data (e.g. PII, PHI, Finance).
+- Managed (Built-in w/ ML/Patterns) or Custom (Propietary - Regex based).
+- Findings can be delivered as an event to EventBridge.
+
+## 16.8. Amazon Inspector
+> Scans EC2 instances, instance OS, and containers for vulnerabilities and deviations against best practice.
+- Length: 15mins, 1 hour, or 1 day.
+- Provides a report of findings ordered by priority.
+- Types: Network Assessment (Agentless) and Network & Host Assessment (Agent). 
+- Rules package determine what is checked.
+  - Common vulnerabilities and exposures (CVE).
+  - Center for Internet Security (CIS) benchmarks.
+  - Security best practices for Amazon Inspector.
+
+## 16.9. Amazon GuardDuty
+> Continuous security monitoring service that analyses supported data sources using AI/ML + threat intelligence feeds.
+- Identifies unexpected and unauthorised activity.
+- Notify or event-driven protection/remediation.
+- Supports multiple accounts (Master and Member).
+- *Sources*: DNS Logs, VPC Flow Logs, CloudTrail Event Logs, CloudTrail Management Events, CloudTrail S3 Data Events.
