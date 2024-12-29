@@ -75,12 +75,12 @@ Contributions to the notes are welcome! If you find any errors or have updated n
   - Soft limit: 100 buckets/account; hard limit: 1000.
 
 ## 1.6 CloudFormation Basics
-- Automates infrastructure using templates (YAML/JSON).
+> Automates infrastructure using templates (YAML/JSON).
 - Templates create/update stacks (living representations of resources).
   - Example: Deploying multi-tier web apps with a single template.
 
 ## 1.7 CloudWatch Basics
-- **Monitoring**: Tracks metrics (e.g., CPU usage, disk I/O), logs, and events.
+> **Monitoring**: Tracks metrics (e.g., CPU usage, disk I/O), logs, and events.
   - **Alarms**: Trigger actions like sending SNS notifications.
 - **Dimensions**: Name-value pairs to separate data sources within a metric.
 
@@ -94,7 +94,7 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 - **Disaster Recovery (DR)**: Prepares for major failures with recovery plans.
 
 ## 1.10 Route53 Fundamentals
-- **DNS as a Service**: Manages domain registration and zones (public/private).
+> **DNS as a Service**: Manages domain registration and zones (public/private).
   - Example: Hosting DNS records for a website.
 - Globally resilient with fault tolerance across regions.
 
@@ -224,7 +224,7 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 ## 2.9. CloudWatch Logs
 
 ### Overview
-- **Purpose**: Store, monitor, and analyze logging data.
+> **Purpose**: Store, monitor, and analyze logging data.
 - **Architecture**:
   - **Log Events**: Data points with a timestamp.
   - **Log Streams**: Sequences of log events from the same source.
@@ -235,7 +235,7 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 ## 2.10. CloudTrail Essentials
 
 ### Overview
-Tracks API activity and user actions for auditing and compliance.
+> Tracks API activity and user actions for auditing and compliance.
 
 ### Key Features:
 1. **Event History**: Retains 90 days of management events for free.
@@ -263,6 +263,7 @@ Tracks API activity and user actions for auditing and compliance.
 - **Account Factory**: Automates and standardizes account creation
 
 ## Simple Storage Service (S3)
+> Object storage service used for storing, retrieving, and magnaging data (e.g., files, images, videos, etc.)
 
 ## 3.1. S3 Security
 
@@ -274,7 +275,7 @@ Tracks API activity and user actions for auditing and compliance.
 
 ## 3.2. S3 Static Hosting
 
-- Enables serving static websites directly from S3 via HTTP.
+> Enables serving static websites directly from S3 via HTTP.
 - Requires:
   - **Index Document**: Entry point (e.g., `index.html`).
   - **Error Document**: For error handling (e.g., `404.html`).
@@ -943,8 +944,6 @@ ECS manages:
 - Ingress: Exposes a way into a service (Ingress => Routing => Service => 1+Pods).
 - Ingress Controller: used to provide ingress (e.g. AWS LB Controller).
 - Persistent Storage (PV) - Volumes
-
- ![kubernetesStructure](image-1.png)
 
 ## 6.5 Elastic Kubernetes Service (EKS)
 
