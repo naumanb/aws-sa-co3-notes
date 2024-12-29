@@ -23,6 +23,8 @@ Contributions to the notes are welcome! If you find any errors or have updated n
 14. [Advanced VPC](#advanced-vpc)
 15. [Hybrid Environments and Migration](#hybrid-environments-and-migration)
 16. [Security, Deployment, and Operations](#security-deployment-and-operations)
+17. [Infrastructure as Code (CloudFormation)](#infrastructure-as-code-cloudformation)
+18. [NoSQL Databases](#nosql-databases)
 
 # AWS Fundamentals
 
