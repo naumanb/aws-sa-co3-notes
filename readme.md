@@ -3265,3 +3265,118 @@ If you need to read 10 ITEMS per second w/ 2.5KB average size per ITEM.
 - Use S3 for backups - can be copied across AZs.
 - Automatic incremental backups every 8 hours or 5GB of data w/ 1 day retention (default)/
 - Manual snapshots can be taken at any time.
+
+# Machine Learning 101
+
+## 19.1. Amazon Comprehend
+> Natural-language processing (NLP) service that uses machine learning to uncover valuable insights and connections in text.
+- Input = Document
+- Output = Entities, Keywords, Sentiment, etc.
+- Pre-trained models or Custom.
+- Real-time analysis for small workloads
+- Async jobs for larger workloads
+- *Usable from Console, CLI, and APIs*.
+
+## 19.2. Amazon Kendra
+> Intelligent search service powered by ML. BACKEND SERVICE (APIs).
+- Designed to mimic interating with a human.
+- Supports wide range of question types:
+  - Factoid - Who, What, Where
+  - Descriptive - How do I get ...
+  - Keyword - Helps determine intent of words.
+- Index - searchable data organized efficiently.
+- Data Source - where data lives (e.g., S3, Google Workspace, RDS, OneDrive).
+- Synchronize with index based on schedule.
+- Documents - Structured (FAQs), Unstructured (HTML, PDFs, etc).
+- Integrates w/ AWS Services (IAM, Identity Center).
+- Backend services (using APIs).
+
+## 19.3. Amazon Lex
+> Fully managed AI service with advanced NLP models to design, build, test, and deploy conversational interfaces in applications. BACKEND SERVICE (APIs).
+- "Lex for Alexa"
+- **Automatic speech recognition (ASR)** - speech to text.
+- **Natural Langauge Understanding (NLU)** - intent.
+- Build understanding into your application.
+- Scales, integrates, quick to deploy, pas as you go pricing.
+- Chatbot, Voice Assistant, Q&A Bots, etc.
+
+## 19.4. Amazon Polly
+> Turns text into lifelike speech, allowing you to create applications that talk.
+- Text (language) => Speech (language). No translation!
+- Standard TTS - Concatenative.
+- Neural TTS - phenomes => spectrograms => vocoder => audio.
+- **Speech Synthesis Markup Language (SSML)** for control.
+  - For ex. emphasis, pronunciation, whispering, speaking styles, etc.
+
+## 19.5. Amazon Rekognition
+> Deep learning Image and Video Analysis service.
+- Identify objects, people, text, activities, content moderation, face detection, face analysis, face comparison, pathing, and more.
+- Per image or Per Minute (video) pricing.
+- Integrates with applications & event-driven.
+- Can analyse live video streams - kinesis video streams.
+
+## 19.6. Amazon Textract
+> Detect and Analyse text contained in input documents such as images.
+- Input = JPEG, PNG, PDF, or TIFF
+- Output = Extracted text, structure, and analysis.
+- Most documents = Synchronous (real-time).
+- Large documents = Async (non-real-time).
+- Detection of text + relationship between text + metadata.
+
+## 19.7. Amazon Transcribe
+> Automatic Speech Recognition (ASR) service.
+- Input = Audio, Output = Text.
+- Custom vocabularies and language models.
+- Pay as you use, per second of transcribed audio.
+
+Use cases:
+- Full text indexing of audio.
+- Meeting notes.
+- Captions and transcripts.
+- Call analytics.
+- Integrationg with other apps / AWS ML services.
+
+## 19.8. Amazon Translate
+> Text translation service using ML.
+- Translates text from native language to other languages one word at a time.
+- Encoder reads source => semantic representation (meaning).
+- Decoder reads meaning => writes target language.
+- Auto detect source language.
+
+Use cases:
+- Multilingual user exprerience.
+- Translate incoming data.
+- Language-independence for other AWS services.
+- Commonly integrated with other services/apps/platforms.
+
+## 19.9. Amazon Forecast
+> Time series forecasting service.
+- For ex. retail demand, supply chain, staffing, energy, server capacity, web traffic, etc.
+- Import historical data & related data.
+- Output = forecast and forecast explainability (reasons).
+- Web console, CLI, APIs, Python SDK.
+
+## 19.10. Amazon Fraud Detector
+> Managed fraud detection service that automates detection of fraudulent activities online.
+- Upload historical data, choose model type.
+- Online fraud - little historical datal.
+- Transaction fraud - transactional history.
+- Account Takeover - identify phishing
+- Things are scored - Rule/Decisions based on score.
+
+## 19.11. Amazon Sagemaker
+> Fully managed Machine Learning (ML) service.
+- Fetch, clean, prepare, train, evaluate, deploy, monitor, and collect.
+- SageMaker Studio - build, train, and deploy ML models.
+- SageMaker Domain - EFS Volume, users, apps, policies, vpcs, and other isolation services.
+- Containers - Docker containers delployed on EC2 instances (OS, Libs, Tooling).
+- Hosting - Deploy endpoints for models.
+- No cost - but the resources do (complex pricing).
+
+# AWS Local Zones
+> Type of infrastructure deployment that places compute, storage, database, and other select AWS services close to large population and industry centers.
+- 1 zone, no built-in resilience.
+- Think of them like an AZ, near your location.
+- Low latency, from low proximity.
+- Not all products support them.
+- Use parent regions (e.g., EBS snapshots to parent AZs).
