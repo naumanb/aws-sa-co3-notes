@@ -3,13 +3,13 @@
 
 ## Contribute
 
-Contributions to the notes are welcome! If you find any errors or have updated notes, please do me a favor and open an issue or submit a pull request. Thanks! :relaxed:
+Contributions to the notes are welcome! If you find any errors or have updated notes, please do me a favor and open an issue or submit a pull request. Thanks!
 
 ## Table of Contents
 
 1. [AWS Fundamentals](#aws-fundamentals)
 2. [IAM, Accounts, and AWS Organizations](#iam-accounts-and-aws-organizations)
-3. [Security, Identity, and Compliance](#simple-storage-service-s3)
+3. [Simple Storage Service (S3)](#simple-storage-service-s3)
 4. [Virtual Private Clouds (VPC)](#virtual-private-cloud-vpc)
 5. [Elastic Cloud Compute (EC2)](#elastic-cloud-compute-ec2)
 6. [Containers and ECS](#containers-and-ecs)
